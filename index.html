@@ -3,281 +3,327 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>세션 일정 통합 관리 시스템</title>
+    <title>Scheduler - 세션 일정 통합 관리 시스템</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+        
         body {
             font-family: 'Inter', 'Noto Sans KR', sans-serif;
+            background-color: #f8fafc;
         }
-        /* 드래그 선택 시 텍스트 블록 방지 */
+
+        /* 드래그 상태에서 텍스트 블록 방지 */
         .no-select {
             user-select: none;
             -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+
+        /* 캘린더 스크롤 바 커스텀 */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
         }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+<body class="min-h-screen flex flex-col no-select text-slate-800">
 
-    <!-- 글로벌 데모 컨트롤러 (사용자 테스트 편의용) -->
-    <div class="bg-indigo-900 text-white px-4 py-2 flex flex-wrap justify-between items-center text-xs gap-2 z-50 sticky top-0 shadow-md">
+    <!-- 글로벌 프로토타입 컨트롤 디바이스 (상단 고정 헤더) -->
+    <div class="bg-slate-900 text-white px-4 py-2.5 flex flex-wrap justify-between items-center text-xs gap-2 z-50 sticky top-0 shadow-md">
         <div class="flex items-center gap-2">
-            <span class="bg-indigo-700 px-2 py-0.5 rounded-full font-bold">프로토타입 컨트롤러</span>
-            <span>화면을 이동하며 기능 디자인을 테스트해보세요.</span>
+            <span class="bg-indigo-600 px-2.5 py-1 rounded-full font-bold tracking-wider text-[10px]">PROTOTYPE CONTROLLER</span>
+            <span class="text-slate-300 hidden sm:inline">역할군을 전환하며 관리 시나리오와 게스트 제출 인터랙션을 체험해보세요.</span>
         </div>
-        <div class="flex gap-1">
-            <button onclick="switchView('login')" class="demo-btn bg-indigo-700 hover:bg-indigo-600 px-2 py-1 rounded transition">1. 로그인</button>
-            <button onclick="switchView('admin-dashboard')" class="demo-btn bg-indigo-700 hover:bg-indigo-600 px-2 py-1 rounded transition">2. 세션 대시보드</button>
-            <button onclick="switchView('admin-detail')" class="demo-btn bg-indigo-700 hover:bg-indigo-600 px-2 py-1 rounded transition">3. 일정 통합 분석</button>
-            <button onclick="switchView('guest-survey')" class="demo-btn bg-indigo-700 hover:bg-indigo-600 px-2 py-1 rounded transition">4. 게스트 설문지</button>
+        <div class="flex gap-1.5">
+            <button onclick="switchView('login')" class="demo-btn px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 transition">1. 소셜 로그인</button>
+            <button onclick="switchView('admin-dashboard')" class="demo-btn px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 transition">2. 세션 대시보드</button>
+            <button onclick="switchView('admin-detail')" class="demo-btn px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 transition">3. 일정 통합 히트맵</button>
+            <button onclick="switchView('guest-survey')" class="demo-btn px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 transition">4. 게스트 설문 수집</button>
         </div>
     </div>
 
-    <!-- 메인 네비게이션 (관리자용) -->
+    <!-- 마스터 공통 네비게이션 헤더 -->
     <header id="main-header" class="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center hidden">
         <div class="flex items-center gap-3">
-            <div class="bg-indigo-600 text-white p-2 rounded-lg">
-                <i data-lucide="calendar-days" class="w-6 h-6"></i>
+            <div class="bg-indigo-600 text-white p-2.5 rounded-xl shadow-lg shadow-indigo-100">
+                <i data-lucide="calendar" class="w-6 h-6"></i>
             </div>
             <div>
                 <h1 class="text-lg font-bold text-slate-900 tracking-tight flex items-center gap-2">
-                    Scheduler <span class="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded font-medium">관리자 모드</span>
+                    Scheduler <span class="text-xs bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-full font-semibold">v1.4 Premium</span>
                 </h1>
-                <p class="text-xs text-slate-500">동현이의 세션 및 일정 통합 시스템</p>
+                <p class="text-[11px] text-slate-500 font-medium">동현이의 세션 및 일정 통합 시스템 (Firebase Spark Plan)</p>
             </div>
         </div>
+        
+        <!-- 우측 프로필 영역 -->
         <div class="flex items-center gap-4">
             <div class="text-right hidden sm:block">
-                <p class="text-sm font-semibold text-slate-800">이동현 중간관리자</p>
-                <p class="text-xs text-slate-500">dh.lee@company.com</p>
+                <p class="text-xs font-bold text-slate-900">이동현 중간관리자</p>
+                <p class="text-[10px] text-slate-400">dh.lee@company.com</p>
             </div>
-            <img class="w-10 h-10 rounded-full border border-slate-200" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80" alt="프로필">
-            <button onclick="logout()" class="text-slate-400 hover:text-red-500 transition" title="로그아웃">
+            <div class="relative">
+                <img class="w-10 h-10 rounded-xl border border-slate-200 shadow-sm" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80" alt="Profile">
+                <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white"></span>
+            </div>
+            <button onclick="logout()" class="p-2 text-slate-400 hover:text-red-500 rounded-lg hover:bg-slate-50 transition" title="로그아웃">
                 <i data-lucide="log-out" class="w-5 h-5"></i>
             </button>
         </div>
     </header>
 
-    <!-- 전체 본문 영역 -->
+    <!-- 메인 레이아웃 프레임 -->
     <main class="flex-1 flex flex-col">
 
-        <!-- [VIEW 1] 로그인 페이지 -->
+        <!-- ================= [화면 1] 소셜 로그인 & 인증 화면 ================= -->
         <section id="view-login" class="flex-1 flex items-center justify-center p-6">
-            <div class="bg-white p-8 rounded-2xl shadow-xl border border-slate-100 w-full max-w-md">
+            <div class="bg-white p-8 rounded-3xl shadow-xl border border-slate-100 w-full max-w-md transition-all duration-300">
                 <div class="text-center mb-8">
-                    <div class="inline-flex bg-indigo-100 text-indigo-600 p-4 rounded-full mb-4">
-                        <i data-lucide="calendar" class="w-8 h-8"></i>
+                    <div class="inline-flex bg-indigo-50 text-indigo-600 p-4 rounded-2xl mb-4 shadow-sm">
+                        <i data-lucide="shield-check" class="w-10 h-10"></i>
                     </div>
-                    <h2 class="text-2xl font-bold text-slate-900">세션 일정 통합 시스템</h2>
-                    <p class="text-slate-500 mt-2 text-sm">관리자 계정으로 로그인하여 세션을 시작하세요</p>
+                    <h2 class="text-2xl font-bold text-slate-900 tracking-tight">쉽고 빠른 일정 통합</h2>
+                    <p class="text-slate-500 mt-1.5 text-sm">소셜 간편 로그인으로 즉시 사용해보세요</p>
                 </div>
 
-                <form onsubmit="handleLogin(event)" class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-2">이메일 주소</label>
-                        <div class="relative">
-                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-                                <i data-lucide="mail" class="w-5 h-5"></i>
-                            </span>
-                            <input type="email" id="login-email" value="dh.lee@company.com" required
-                                class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition text-sm">
+                <!-- 소셜 로그인 버튼 그리드 -->
+                <div class="space-y-3">
+                    <button onclick="simulateSocialLogin('Google')" class="w-full flex items-center justify-between px-5 py-3.5 bg-white border border-slate-200 rounded-2xl hover:bg-slate-50 hover:border-slate-300 transition font-medium text-sm text-slate-700">
+                        <div class="flex items-center gap-3">
+                            <span class="w-5 h-5 flex items-center justify-center text-red-500 font-extrabold text-lg">G</span>
+                            <span>Google 계정으로 로그인</span>
                         </div>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-2">비밀번호</label>
-                        <div class="relative">
-                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-                                <i data-lucide="lock" class="w-5 h-5"></i>
-                            </span>
-                            <input type="password" id="login-password" value="••••••••" required
-                                class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition text-sm">
-                        </div>
-                    </div>
-                    <div class="flex items-center justify-between text-xs pt-1">
-                        <label class="flex items-center gap-2 cursor-pointer text-slate-600">
-                            <input type="checkbox" checked class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
-                            로그인 상태 유지
-                        </label>
-                        <a href="#" class="text-indigo-600 hover:underline">비밀번호 찾기</a>
-                    </div>
-                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl shadow-lg shadow-indigo-100 transition duration-200 flex items-center justify-center gap-2 text-sm mt-2">
-                        로그인 <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                        <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
                     </button>
-                </form>
+
+                    <button onclick="simulateSocialLogin('Naver')" class="w-full flex items-center justify-between px-5 py-3.5 bg-[#03C75A] text-white rounded-2xl hover:opacity-90 transition font-medium text-sm">
+                        <div class="flex items-center gap-3">
+                            <span class="w-5 h-5 flex items-center justify-center font-black text-base">N</span>
+                            <span>네이버 계정으로 로그인</span>
+                        </div>
+                        <i data-lucide="chevron-right" class="w-4 h-4 text-white/80"></i>
+                    </button>
+
+                    <button onclick="simulateSocialLogin('Kakao')" class="w-full flex items-center justify-between px-5 py-3.5 bg-[#FEE500] text-[#191919] rounded-2xl hover:opacity-90 transition font-medium text-sm">
+                        <div class="flex items-center gap-3">
+                            <span class="w-5 h-5 flex items-center justify-center font-bold text-base">K</span>
+                            <span>카카오 계정으로 로그인</span>
+                        </div>
+                        <i data-lucide="chevron-right" class="w-4 h-4 text-slate-700"></i>
+                    </button>
+
+                    <button onclick="simulateSocialLogin('Instagram')" class="w-full flex items-center justify-between px-5 py-3.5 bg-gradient-to-r from-[#F9ED32] via-[#EE2A7B] to-[#D8019F] text-white rounded-2xl hover:opacity-95 transition font-medium text-sm">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="instagram" class="w-5 h-5"></i>
+                            <span>Instagram 계정으로 로그인</span>
+                        </div>
+                        <i data-lucide="chevron-right" class="w-4 h-4 text-white/80"></i>
+                    </button>
+                </div>
 
                 <div class="mt-8 pt-6 border-t border-slate-100 text-center">
-                    <p class="text-xs text-slate-400">Firebase Spark Plan 기반 무료 인프라 구동 중</p>
+                    <p class="text-xs text-slate-400 flex items-center justify-center gap-1">
+                        <i data-lucide="lock" class="w-3.5 h-3.5"></i> Firebase Authentication 기반 안전 로그인
+                    </p>
                 </div>
             </div>
         </section>
 
-        <!-- [VIEW 2] 통합 관리자 페이지 (대시보드) -->
+        <!-- ================= [화면 2] 통합 관리자 대시보드 ================= -->
         <section id="view-admin-dashboard" class="flex-1 flex flex-col md:flex-row hidden">
-            <!-- 사이드바 네비게이션 -->
-            <aside class="w-full md:w-64 bg-white border-r border-slate-200 p-4 flex flex-col justify-between shrink-0">
+            
+            <!-- 관리 대시보드 사이드 네비게이션 -->
+            <aside class="w-full md:w-64 bg-white border-r border-slate-200 p-5 flex flex-col justify-between shrink-0">
                 <div class="space-y-6">
                     <div class="space-y-1">
-                        <button onclick="switchTab('home')" class="tab-btn w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl bg-indigo-50 text-indigo-600 transition">
-                            <i data-lucide="home" class="w-5 h-5"></i> 홈 (전체 세션)
+                        <button onclick="switchSidebarTab('home')" id="tab-home" class="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold rounded-xl bg-indigo-50 text-indigo-600 transition">
+                            <i data-lucide="layout-grid" class="w-5 h-5"></i> 전체 세션 대시보드
                         </button>
-                        <button onclick="switchTab('calendar')" class="tab-btn w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl text-slate-600 hover:bg-slate-50 transition">
-                            <i data-lucide="calendar" class="w-5 h-5"></i> 통합 캘린더
+                        <button onclick="openCategorySettings()" class="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold rounded-xl text-indigo-600 bg-indigo-50/50 hover:bg-indigo-50 transition border border-indigo-100">
+                            <i data-lucide="tags" class="w-5 h-5"></i> 카테고리 설정 관리
                         </button>
-                        <button onclick="showModal('setting-modal')" class="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl text-slate-600 hover:bg-slate-50 transition">
-                            <i data-lucide="settings" class="w-5 h-5"></i> 시스템 설정
+                        <button onclick="openMailSettings()" class="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold rounded-xl text-slate-600 hover:bg-slate-50 transition">
+                            <i data-lucide="mail" class="w-5 h-5"></i> 관리자 메일 설정
+                        </button>
+                        <button onclick="openCreateSessionModal()" class="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold rounded-xl text-emerald-600 bg-emerald-50 hover:bg-emerald-100/70 transition">
+                            <i data-lucide="plus-circle" class="w-5 h-5"></i> 새 일정 세션 개설
                         </button>
                     </div>
 
+                    <!-- 활성 세션 간단 가이드 리스트 -->
                     <div class="pt-4 border-t border-slate-100">
-                        <p class="text-xs font-semibold text-slate-400 px-4 mb-2 uppercase">나의 관리 리스트</p>
-                        <div class="space-y-1 text-xs">
-                            <a href="#" onclick="openSessionDetail(0)" class="block px-4 py-2 text-slate-600 hover:text-indigo-600 rounded-lg hover:bg-slate-50 transition font-medium">Relational-DB (SQL) 강좌</a>
-                            <a href="#" onclick="openSessionDetail(1)" class="block px-4 py-2 text-slate-600 hover:text-indigo-600 rounded-lg hover:bg-slate-50 transition font-medium">Document-DB (NoSQL) 강좌</a>
-                            <a href="#" onclick="openSessionDetail(2)" class="block px-4 py-2 text-slate-600 hover:text-indigo-600 rounded-lg hover:bg-slate-50 transition font-medium">Git 강좌</a>
+                        <p class="text-[10px] font-bold text-slate-400 px-4 mb-2 uppercase tracking-widest">Active Classes</p>
+                        <div id="sidebar-session-list" class="space-y-1 text-xs font-semibold">
+                            <!-- JS를 통해 세션 바로가기 리스트가 주입됩니다. -->
                         </div>
                     </div>
                 </div>
 
-                <!-- 무료 플랜 인디케이터 -->
-                <div class="bg-amber-50 rounded-xl p-3 border border-amber-200 mt-6 md:mt-0">
-                    <div class="flex gap-2 items-start">
-                        <i data-lucide="zap" class="w-4 h-4 text-amber-600 shrink-0 mt-0.5"></i>
+                <!-- 인프라 자원 안내 정보판 -->
+                <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200/60 mt-6">
+                    <div class="flex gap-2.5 items-start">
+                        <i data-lucide="hard-drive" class="w-4 h-4 text-slate-500 shrink-0 mt-0.5"></i>
                         <div>
-                            <p class="text-xs font-bold text-amber-800">Firebase Spark Plan</p>
-                            <p class="text-[10px] text-amber-600 mt-0.5">서버리스 무료 플랜 정상 작동 중</p>
+                            <p class="text-xs font-bold text-slate-700">Firebase Spark</p>
+                            <p class="text-[10px] text-slate-400 mt-0.5 leading-relaxed">서버 비용 0원 유지 가상 SQLConnect DB 구동 중</p>
                         </div>
                     </div>
                 </div>
             </aside>
 
-            <!-- 대시보드 콘텐츠 영역 -->
-            <div class="flex-1 p-6 overflow-y-auto">
-                <div class="flex justify-between items-center mb-6">
+            <!-- 메인 대시보드 영역 -->
+            <div class="flex-1 p-6 md:p-8 overflow-y-auto">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                     <div>
-                        <h2 class="text-xl font-bold text-slate-900">클래스 세션 관리</h2>
-                        <p class="text-sm text-slate-500">각 세션별 일정을 모니터링하고 설문을 배포하세요</p>
+                        <h2 class="text-2xl font-bold text-slate-900 tracking-tight">전체 클래스 세션 대시보드</h2>
+                        <p class="text-sm text-slate-500 mt-0.5">구글 클래스룸 형태의 인터페이스를 통해 일정을 한눈에 파악하세요</p>
                     </div>
-                    <button onclick="showModal('create-session-modal')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2.5 rounded-xl shadow-md text-sm flex items-center gap-2 transition">
-                        <i data-lucide="plus" class="w-4 h-4"></i> 새 세션 만들기
-                    </button>
+                    <div class="flex gap-2 shrink-0">
+                        <button onclick="toggleArchivedSessions()" class="bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-1.5 transition">
+                            <i data-lucide="archive" class="w-4 h-4"></i> 보관 세션 토글
+                        </button>
+                    </div>
                 </div>
 
-                <!-- 세션 카드 그리드 (구글 클래스룸 레이아웃 참조) -->
-                <div id="session-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <!-- JS에서 렌더링 -->
+                <!-- 실시간 카테고리 필터링 칩 그룹 -->
+                <div class="mb-6 flex flex-wrap gap-2 items-center">
+                    <span class="text-xs font-bold text-slate-400 flex items-center gap-1">
+                        <i data-lucide="filter" class="w-3.5 h-3.5"></i> 필터링:
+                    </span>
+                    <div id="category-filter-chips" class="flex flex-wrap gap-1.5">
+                        <!-- JS에서 카테고리 리스트 불러와서 칩으로 바인딩 -->
+                    </div>
+                </div>
+
+                <!-- 구글 클래스룸 스타일 세션 카드 그리드 -->
+                <div id="session-card-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- JS 로직에 의해 카드가 동적 생성됩니다 -->
                 </div>
             </div>
         </section>
 
-        <!-- [VIEW 3] 세션 상세 및 일정 통합 페이지 (관리자 모드) -->
+        <!-- ================= [화면 3] 세션 일정 통합 & 분석 히트맵 페이지 ================= -->
         <section id="view-admin-detail" class="flex-1 flex flex-col lg:flex-row hidden">
-            <!-- 왼쪽: 응답 현황 및 유효기간 설정 사이드 패널 -->
+            
+            <!-- 왼쪽: 응답 현황 제어 & 마감 설정 사이드 패널 -->
             <div class="w-full lg:w-80 bg-white border-r border-slate-200 p-6 flex flex-col justify-between shrink-0">
                 <div class="space-y-6">
-                    <!-- 세션 기본 정보 -->
                     <div>
-                        <button onclick="switchView('admin-dashboard')" class="text-xs text-indigo-600 hover:underline flex items-center gap-1 mb-3">
-                            <i data-lucide="chevron-left" class="w-3 h-3"></i> 대시보드로 돌아가기
+                        <button onclick="switchView('admin-dashboard')" class="text-xs text-indigo-600 hover:text-indigo-800 font-bold flex items-center gap-1 mb-4 transition">
+                            <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> 대시보드로 복귀
                         </button>
-                        <h2 id="detail-title" class="text-xl font-bold text-slate-900">세션 로딩 중...</h2>
-                        <p id="detail-category" class="text-xs text-indigo-600 font-semibold mt-1">카테고리</p>
+                        <h2 id="detail-session-title" class="text-xl font-bold text-slate-900 leading-tight">로딩 중...</h2>
+                        <span id="detail-session-category" class="inline-block mt-2 bg-indigo-50 text-indigo-700 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase">DB 세션</span>
                     </div>
 
-                    <!-- 유효기간 설정 카드 -->
-                    <div class="bg-slate-50 rounded-xl p-4 border border-slate-200 space-y-3">
-                        <h3 class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                            <i data-lucide="timer" class="w-4 h-4 text-indigo-600"></i> 설문지 세부 설정
+                    <!-- 유효마감기간 제어 설정 보드 -->
+                    <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-4">
+                        <h3 class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                            <i data-lucide="clock" class="w-4 h-4 text-indigo-600"></i> 유효기간 및 제어 관리
                         </h3>
                         <div>
-                            <label class="block text-[10px] font-bold text-slate-500 mb-1">설문지 만료일</label>
-                            <input type="datetime-local" id="survey-expiry" value="2026-07-10T18:00"
-                                class="w-full text-xs p-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">설문 마감 일시 설정</label>
+                            <input type="datetime-local" id="input-expiry-time"
+                                class="w-full text-xs p-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 font-medium">
                         </div>
-                        <div class="space-y-1">
-                            <label class="flex items-center gap-2 text-xs text-slate-600 cursor-pointer">
-                                <input type="checkbox" checked class="rounded border-slate-300 text-indigo-600">
-                                실시간 중복응답 방지
+                        <div class="space-y-2.5">
+                            <label class="flex items-center gap-2 text-xs font-semibold text-slate-600 cursor-pointer">
+                                <input type="checkbox" id="check-prevent-dup" class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                                실시간 중복 제출 제어
                             </label>
-                            <label class="flex items-center gap-2 text-xs text-slate-600 cursor-pointer">
-                                <input type="checkbox" checked class="rounded border-slate-300 text-indigo-600">
+                            <label class="flex items-center gap-2 text-xs font-semibold text-slate-600 cursor-pointer">
+                                <input type="checkbox" id="check-allow-mutation" class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
                                 게스트 재수정 허용
                             </label>
                         </div>
-                        <button onclick="saveSurveySettings()" class="w-full bg-slate-800 hover:bg-slate-900 text-white text-xs font-medium py-2 rounded-lg transition">
-                            설정 적용하기
+                        <button onclick="applySessionSettings()" class="w-full bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold py-2.5 rounded-xl transition">
+                            설정 즉시 반영
                         </button>
                     </div>
 
-                    <!-- 응답 현황 요약 -->
+                    <!-- 게스트 취합 상태 리스트 -->
                     <div class="space-y-3">
-                        <h3 class="text-xs font-bold text-slate-700 flex justify-between items-center">
-                            <span>게스트 응답 현황</span>
-                            <span id="response-ratio" class="text-indigo-600 font-bold">2 / 4명</span>
-                        </h3>
-                        <!-- 게스트 진행바 -->
+                        <div class="flex justify-between items-center text-xs font-bold text-slate-700">
+                            <span>게스트 응답 수집 현황</span>
+                            <span id="txt-respond-rate" class="text-indigo-600">0 / 0명</span>
+                        </div>
                         <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                            <div id="response-progress" class="bg-indigo-600 h-full rounded-full transition-all duration-500" style="width: 50%"></div>
+                            <div id="bar-respond-progress" class="bg-indigo-600 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
                         </div>
 
-                        <!-- 게스트 목록 -->
-                        <div id="guest-status-list" class="space-y-2 pt-2">
-                            <!-- JS에서 현황 랜더링 -->
+                        <!-- 개별 게스트 상태 스크롤 박스 -->
+                        <div id="detail-guest-list" class="space-y-1.5 max-h-[180px] overflow-y-auto custom-scrollbar">
+                            <!-- JS에 의해 동적 렌더링 -->
                         </div>
                     </div>
                 </div>
 
-                <!-- 일정 내보내기 그룹 (CSV, XLSX, 구글시트) -->
-                <div class="pt-6 border-t border-slate-100 space-y-2">
-                    <p class="text-xs font-bold text-slate-500 uppercase mb-2">일정 데이터 내보내기</p>
+                <!-- 파일 내보내기 영역 -->
+                <div class="pt-6 border-t border-slate-100">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">일정 취합 데이터 내보내기</p>
                     <div class="grid grid-cols-3 gap-2">
-                        <button onclick="exportData('CSV')" class="flex flex-col items-center justify-center p-2.5 bg-slate-50 hover:bg-emerald-50 hover:text-emerald-700 border border-slate-200 rounded-xl transition text-[11px] font-semibold gap-1">
+                        <button onclick="exportDataAction('CSV')" class="flex flex-col items-center p-3 bg-slate-50 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 border border-slate-200 rounded-xl transition text-[11px] font-bold gap-1.5">
                             <i data-lucide="file-text" class="w-4 h-4 text-emerald-600"></i> CSV
                         </button>
-                        <button onclick="exportData('XLSX')" class="flex flex-col items-center justify-center p-2.5 bg-slate-50 hover:bg-blue-50 hover:text-blue-700 border border-slate-200 rounded-xl transition text-[11px] font-semibold gap-1">
+                        <button onclick="exportDataAction('XLSX')" class="flex flex-col items-center p-3 bg-slate-50 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 border border-slate-200 rounded-xl transition text-[11px] font-bold gap-1.5">
                             <i data-lucide="file-spreadsheet" class="w-4 h-4 text-blue-600"></i> XLSX
                         </button>
-                        <button onclick="exportData('Google Sheets')" class="flex flex-col items-center justify-center p-2.5 bg-slate-50 hover:bg-indigo-50 hover:text-indigo-700 border border-slate-200 rounded-xl transition text-[11px] font-semibold gap-1">
-                            <i data-lucide="cloud" class="w-4 h-4 text-indigo-600"></i> 시트 연동
+                        <button onclick="exportDataAction('GoogleSheets')" class="flex flex-col items-center p-3 bg-slate-50 hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-200 border border-slate-200 rounded-xl transition text-[11px] font-bold gap-1.5">
+                            <i data-lucide="cloud-lightning" class="w-4 h-4 text-indigo-600"></i> 구글 시트
                         </button>
                     </div>
                 </div>
             </div>
 
-            <!-- 오른쪽: 최적 일정 통합 캘린더 분석 뷰 (히트맵) -->
-            <div class="flex-1 p-6 overflow-y-auto bg-slate-50 flex flex-col">
+            <!-- 오른쪽: 일정 중첩 분석 히트맵 뷰어 -->
+            <div class="flex-1 p-6 md:p-8 overflow-y-auto bg-slate-50 flex flex-col">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
                     <div>
-                        <h3 class="text-lg font-bold text-slate-900">세션 일정 통합 대시보드</h3>
-                        <p class="text-xs text-slate-500">여러 명의 개인 일정을 조합하여 최적의 시간대를 추천합니다.</p>
+                        <h3 class="text-xl font-bold text-slate-900 tracking-tight">수집 일정 종합 분석 뷰</h3>
+                        <p class="text-xs text-slate-500 mt-0.5">게스트들의 참여 가능한 빈도를 계산하여 최적 시간을 도출합니다.</p>
                     </div>
-                    <div class="flex gap-2 shrink-0">
-                        <button id="view-heatmap-btn" onclick="toggleCalendarView('heatmap')" class="bg-indigo-600 text-white text-xs font-medium px-3 py-1.5 rounded-lg border border-indigo-600 transition">공통 일정 (히트맵)</button>
-                        <button id="view-individual-btn" onclick="toggleCalendarView('individual')" class="bg-white text-slate-600 hover:bg-slate-100 text-xs font-medium px-3 py-1.5 rounded-lg border border-slate-200 transition">개인별 직접 조회</button>
+                    <div class="flex bg-white p-1 rounded-xl border border-slate-200 text-xs font-semibold gap-1 shrink-0">
+                        <button id="btn-heatmap-view" onclick="toggleAnalysisView('heatmap')" class="px-3.5 py-1.5 rounded-lg bg-indigo-600 text-white transition shadow-sm">공통 일정 (히트맵)</button>
+                        <button id="btn-individual-view" onclick="toggleAnalysisView('individual')" class="px-3.5 py-1.5 rounded-lg text-slate-600 hover:bg-slate-50 transition">개인별 직접 조회</button>
                     </div>
                 </div>
 
-                <!-- 최적 일정 제안 AI 박스 -->
-                <div class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-2xl p-4 shadow-lg shadow-indigo-100 mb-6 flex items-start gap-4">
-                    <div class="p-3 bg-white/10 rounded-xl shrink-0">
-                        <i data-lucide="sparkles" class="w-6 h-6 text-yellow-300 animate-pulse"></i>
+                <!-- 분석 추천 결과 카드 -->
+                <div class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl p-5 shadow-xl shadow-indigo-100 mb-6 flex items-start gap-4 transform transition-all hover:scale-[1.01]">
+                    <div class="p-3 bg-white/15 rounded-xl shrink-0 mt-0.5 animate-pulse">
+                        <i data-lucide="sparkles" class="w-6 h-6 text-yellow-300"></i>
                     </div>
-                    <div>
-                        <p class="text-xs font-bold text-indigo-100 uppercase tracking-widest">일정 취합 추천 분석</p>
-                        <h4 class="text-base font-bold mt-1">이번 주 가장 추천하는 타임슬롯</h4>
-                        <div id="ai-recom" class="text-sm text-white/90 mt-2 space-y-1">
-                            <!-- JS 추천 로직이 동작 -->
+                    <div class="flex-1">
+                        <p class="text-[10px] font-bold text-indigo-100 uppercase tracking-widest">Scheduler 분석 추천 일정</p>
+                        <h4 class="text-base font-bold mt-1">참석 밀집도가 가장 높은 타임 슬롯 리스트</h4>
+                        <div id="ai-recom-list" class="text-xs text-white/95 mt-3 space-y-1.5">
+                            <!-- JS를 통해 상위 3가지 슬롯 추천 -->
                         </div>
                     </div>
                 </div>
 
-                <!-- 캘린더 컴포넌트 -->
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 flex-1 flex flex-col min-w-[600px] overflow-x-auto">
+                <!-- 반응형 캘린더 판넬 -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 flex-1 flex flex-col min-w-[700px] overflow-x-auto custom-scrollbar">
+                    
                     <!-- 요일 헤더 -->
                     <div class="grid grid-cols-6 border-b border-slate-100 pb-3 text-center text-xs font-bold text-slate-500">
-                        <div>시간대</div>
+                        <div class="flex items-center justify-center gap-1"><i data-lucide="clock" class="w-3.5 h-3.5"></i> 시간대</div>
                         <div>월요일 (29)</div>
                         <div>화요일 (30)</div>
                         <div class="text-indigo-600 flex items-center justify-center gap-1">수요일 (1) <span class="w-1.5 h-1.5 bg-indigo-600 rounded-full"></span></div>
@@ -285,73 +331,77 @@
                         <div>금요일 (3)</div>
                     </div>
 
-                    <!-- 시간 슬롯 데이터 바인딩 컨테이너 -->
-                    <div id="admin-calendar-grid" class="grid grid-cols-6 flex-1 divide-y divide-slate-100 text-xs max-h-[500px] overflow-y-auto">
-                        <!-- JS에서 09:00 ~ 18:00 (1시간 단위) 렌더링 -->
+                    <!-- 달력 타임슬롯 본체 -->
+                    <div id="admin-heatmap-grid" class="grid grid-cols-6 flex-1 divide-y divide-slate-100 text-xs max-h-[480px] overflow-y-auto custom-scrollbar">
+                        <!-- JS로 슬롯 렌더링 -->
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- [VIEW 4] 게스트 세션 일정 설문지 페이지 -->
+        <!-- ================= [화면 4] 게스트 세션 일정 설문지 제출 페이지 ================= -->
         <section id="view-guest-survey" class="flex-1 flex flex-col lg:flex-row hidden">
-            <!-- 설문 정보 사이드바 -->
+            
+            <!-- 게스트 입력 패널 -->
             <div class="w-full lg:w-80 bg-white border-r border-slate-200 p-6 flex flex-col justify-between shrink-0">
                 <div class="space-y-6">
-                    <div class="inline-flex bg-pink-100 text-pink-600 p-3 rounded-xl">
-                        <i data-lucide="file-question" class="w-6 h-6"></i>
+                    <div class="inline-flex bg-pink-50 text-pink-600 p-3.5 rounded-xl border border-pink-100 shadow-sm">
+                        <i data-lucide="file-text" class="w-6 h-6"></i>
                     </div>
                     <div>
-                        <span class="bg-pink-100 text-pink-800 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase">일정 수집 설문지</span>
-                        <h2 id="guest-session-title" class="text-xl font-bold text-slate-900 mt-2">Relational-DB (SQL) 강좌</h2>
-                        <p class="text-xs text-slate-500 mt-1">강좌 시간 조율을 위해 가능한 모든 빈 시간을 체크해 주세요.</p>
+                        <span class="bg-pink-100 text-pink-700 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase">일정 참여 양식</span>
+                        <h2 id="guest-survey-title" class="text-xl font-bold text-slate-900 mt-2 leading-tight">로딩 중...</h2>
+                        <p class="text-xs text-slate-500 mt-1 leading-relaxed">가능한 모든 시간대를 마우스 드래그 혹은 모바일 손가락 터치로 긁어서 선택하세요.</p>
                     </div>
 
-                    <!-- 유효 기간 안내 -->
-                    <div class="p-3 bg-red-50 text-red-700 rounded-xl text-xs space-y-1 border border-red-100">
-                        <p class="font-bold flex items-center gap-1.5"><i data-lucide="alert-circle" class="w-4 h-4"></i> 제출기한</p>
-                        <p id="guest-expiry-text">2026년 7월 10일 (금) 18시 마감</p>
+                    <!-- 기한 알림판 -->
+                    <div class="p-4 bg-rose-50 text-rose-700 rounded-2xl text-xs space-y-1.5 border border-rose-100">
+                        <p class="font-bold flex items-center gap-1.5"><i data-lucide="alert-triangle" class="w-4 h-4"></i> 제출 기한 엄수</p>
+                        <p id="guest-survey-expiry-text" class="font-medium text-[11px] text-rose-600/90"></p>
                     </div>
 
-                    <!-- 유효성 검사 및 이름 설정 -->
-                    <div class="space-y-3">
-                        <label class="block text-xs font-bold text-slate-700">설문자 성함</label>
+                    <!-- 실명 검증 인풋 -->
+                    <div class="space-y-2">
+                        <label class="block text-xs font-bold text-slate-700">설문 참여자 이름 (본명 필수)</label>
                         <div class="relative">
-                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-                                <i data-lucide="user" class="w-4 h-4"></i>
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                                <i data-lucide="user-check" class="w-4 h-4"></i>
                             </span>
-                            <input type="text" id="guest-name-input" value="박지성" placeholder="이름을 입력하세요"
-                                class="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white text-xs font-medium">
+                            <input type="text" id="guest-name-input" oninput="onGuestNameChange()" placeholder="정확한 실명을 입력해 주세요"
+                                class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-xs font-semibold">
                         </div>
-                        <p class="text-[11px] text-slate-400">설문 중복 방지를 위해 이름을 정확하게 입력해 주세요. (재수정 시 동일 이름 기입시 자동 갱신)</p>
+                        <p class="text-[10px] text-slate-400 leading-relaxed">
+                            관리자가 지정한 중복 방지 규칙이 활성화되어 있어 본명 입력 시 이전에 작성했던 데이터를 불러와 유연하게 재수정할 수 있습니다.
+                        </p>
                     </div>
                 </div>
 
                 <div class="pt-6 border-t border-slate-100">
-                    <button onclick="submitGuestSurvey()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-lg shadow-indigo-100 transition flex items-center justify-center gap-2 text-sm">
+                    <button onclick="triggerGuestSubmitReview()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-indigo-100 transition flex items-center justify-center gap-2 text-sm">
                         <i data-lucide="check" class="w-4 h-4"></i> 내 가능 일정 제출하기
                     </button>
                 </div>
             </div>
 
-            <!-- 게스트 일정 선택 캘린더 판넬 -->
-            <div class="flex-1 p-6 overflow-y-auto bg-slate-50 flex flex-col">
+            <!-- 게스트 직접 입력 캘린더 바디 -->
+            <div class="flex-1 p-6 md:p-8 overflow-y-auto bg-slate-50 flex flex-col">
                 <div class="flex justify-between items-center mb-4">
                     <div>
-                        <h3 class="text-base font-bold text-slate-900">가능한 일정 드래그 또는 터치 선택</h3>
-                        <p class="text-xs text-slate-500">가능한 타임블록을 누르면 민트색 활성화 상태로 변경됩니다.</p>
+                        <h3 class="text-base font-bold text-slate-900 tracking-tight">드래그 및 터치 스와이프 시간 선택</h3>
+                        <p class="text-xs text-slate-500">가능한 타임슬롯을 누르거나 긁어서 민트색으로 활성화하세요.</p>
                     </div>
-                    <div class="flex gap-2 text-xs">
-                        <span class="flex items-center gap-1.5 text-slate-600"><span class="w-3 h-3 bg-white border border-slate-200 rounded"></span> 불가능</span>
-                        <span class="flex items-center gap-1.5 text-indigo-600 font-bold"><span class="w-3 h-3 bg-emerald-300 rounded"></span> 참여 가능</span>
+                    <div class="flex gap-3 text-xs font-semibold">
+                        <span class="flex items-center gap-1.5 text-slate-500"><span class="w-3.5 h-3.5 bg-white border border-slate-200 rounded-md"></span> 불가능</span>
+                        <span class="flex items-center gap-1.5 text-indigo-600"><span class="w-3.5 h-3.5 bg-emerald-300 rounded-md"></span> 가능 (선택됨)</span>
                     </div>
                 </div>
 
-                <!-- 게스트 드래그 셀렉트 캘린더 -->
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 flex-1 flex flex-col min-w-[600px] overflow-x-auto">
+                <!-- 드래그 & 스와이프 선택형 달력 컨테이너 -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 flex-1 flex flex-col min-w-[700px] overflow-x-auto custom-scrollbar">
+                    
                     <!-- 요일 헤더 -->
                     <div class="grid grid-cols-6 border-b border-slate-100 pb-3 text-center text-xs font-bold text-slate-500">
-                        <div>시간대</div>
+                        <div class="flex items-center justify-center gap-1"><i data-lucide="clock" class="w-3.5 h-3.5"></i> 시간대</div>
                         <div>월요일 (29)</div>
                         <div>화요일 (30)</div>
                         <div class="text-indigo-600 flex items-center justify-center gap-1">수요일 (1) <span class="w-1.5 h-1.5 bg-indigo-600 rounded-full"></span></div>
@@ -359,100 +409,240 @@
                         <div>금요일 (3)</div>
                     </div>
 
-                    <!-- 시간 슬롯 드래그 바인딩 컨테이너 -->
-                    <div id="guest-calendar-grid" class="no-select grid grid-cols-6 flex-1 divide-y divide-slate-100 text-xs max-h-[500px] overflow-y-auto">
-                        <!-- JS에서 타임슬롯 생성 -->
+                    <!-- 드래그/스와이프 감지용 캘린더 그리드 -->
+                    <div id="guest-drag-grid" class="grid grid-cols-6 flex-1 divide-y divide-slate-100 text-xs max-h-[480px] overflow-y-auto custom-scrollbar">
+                        <!-- JS에 의해 드래그 가능 슬롯 생성 -->
                     </div>
                 </div>
             </div>
         </section>
+
     </main>
 
-    <!-- 모달 창 레이아웃 그룹 -->
+    <!-- ================= [공통 팝업 모달 그룹] ================= -->
 
-    <!-- 1. 새 세션 개설 모달 -->
-    <div id="create-session-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden">
-        <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl border border-slate-100 m-4">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-bold text-slate-900">새로운 설문 세션 생성</h3>
-                <button onclick="hideModal('create-session-modal')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+    <!-- 1. 새 세션 생성 및 세션 수정 통합 모달 -->
+    <div id="session-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl border border-slate-100 m-4 transition-all transform scale-100">
+            <div class="flex justify-between items-center mb-5">
+                <h3 id="session-modal-title" class="text-lg font-bold text-slate-900 tracking-tight">새 일정 세션 개설</h3>
+                <button onclick="hideModal('session-modal')" class="text-slate-400 hover:text-slate-600 p-1.5 hover:bg-slate-50 rounded-xl transition">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
             </div>
-            <form onsubmit="handleCreateSession(event)" class="space-y-4">
+            <form onsubmit="handleSaveSession(event)" class="space-y-4">
                 <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-1">세션 이름</label>
-                    <input type="text" id="new-session-title" placeholder="예: Python 데이터 분석 기초" required
-                        class="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition">
+                    <label class="block text-xs font-bold text-slate-600 mb-1.5">클래스/세션 이름</label>
+                    <input type="text" id="session-title-input" placeholder="예: Relational-DB (SQL) 강좌" required
+                        class="w-full text-xs p-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition font-medium">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-1">카테고리</label>
-                    <select id="new-session-category"
-                        class="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition">
-                        <option value="Programming 세션">Programming 세션</option>
-                        <option value="DataBase 세션">DataBase 세션</option>
-                        <option value="협업 세션">협업 세션</option>
-                        <option value="Server 세션">Server 세션</option>
+                    <label class="block text-xs font-bold text-slate-600 mb-1.5">세션 카테고리 태그 선택</label>
+                    <select id="session-category-select" required
+                        class="w-full text-xs p-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition font-medium">
+                        <!-- JS에서 활성 카테고리 목록을 동적으로 매칭합니다 -->
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-1">게스트 그룹 설정 (쉼표 구분)</label>
-                    <input type="text" id="new-session-guests" placeholder="김동현, 이영희, 박지성, 최수민" required
-                        class="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition">
+                    <label class="block text-xs font-bold text-slate-600 mb-1.5">지정 게스트 이름 설정 (반점 구분)</label>
+                    <input type="text" id="session-guests-input" placeholder="김동현, 이영희, 박지성, 최수민" required
+                        class="w-full text-xs p-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition font-medium">
                 </div>
-                <div class="flex gap-2 pt-2">
-                    <button type="button" onclick="hideModal('create-session-modal')" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2.5 rounded-xl text-xs transition">취소</button>
-                    <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-xl text-xs transition">세션 생성</button>
+                <div class="flex gap-2.5 pt-3">
+                    <button type="button" onclick="hideModal('session-modal')" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 rounded-2xl text-xs transition">취소</button>
+                    <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-2xl text-xs transition">클래스 저장</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- 2. 내보내기 진행 토스트/알림 모달 -->
-    <div id="toast" class="fixed bottom-4 right-4 bg-slate-950 text-white px-4 py-3 rounded-xl shadow-lg text-xs flex items-center gap-2 transform translate-y-10 opacity-0 transition-all duration-300 pointer-events-none z-50">
-        <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i>
-        <span id="toast-message">알림 메시지</span>
+    <!-- 2. 세션 제어 및 마커 팝업 (Kebab 메뉴 모달) -->
+    <div id="kebab-control-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl m-4">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-base font-bold text-slate-900" id="kebab-modal-title">세션 액션 제어</h3>
+                <button onclick="hideModal('kebab-control-modal')" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            <div class="space-y-2">
+                <button onclick="handleKebabAction('edit')" class="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 text-xs font-bold text-slate-700 rounded-xl transition">
+                    <i data-lucide="edit-3" class="w-4 h-4 text-slate-500"></i> 이름 및 카테고리 정보 수정
+                </button>
+                <button onclick="handleKebabAction('archive')" class="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 text-xs font-bold text-slate-700 rounded-xl transition">
+                    <i data-lucide="archive" class="w-4 h-4 text-slate-500"></i> 세션 보관 설정 및 숨김 처리
+                </button>
+                <button onclick="handleKebabAction('share')" class="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 text-xs font-bold text-slate-700 rounded-xl transition">
+                    <i data-lucide="share-2" class="w-4 h-4 text-slate-500"></i> 세션 공동 이메일 공유 설정
+                </button>
+                <button onclick="handleKebabAction('delete')" class="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 text-xs font-bold text-red-600 rounded-xl transition">
+                    <i data-lucide="trash-2" class="w-4 h-4 text-red-500"></i> 세션 완전 삭제
+                </button>
+            </div>
+        </div>
     </div>
 
-    <!-- 3. 시스템 설정 모달 -->
-    <div id="setting-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden">
-        <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl border border-slate-100 m-4">
+    <!-- 3. 공동 이메일 공유 설정 모달 -->
+    <div id="share-admin-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl m-4">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
-                    <i data-lucide="settings" class="w-5 h-5 text-indigo-600"></i> 시스템 전체 환경 설정
-                </h3>
-                <button onclick="hideModal('setting-modal')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+                <h3 class="text-base font-bold text-slate-900">공동 관리자 할당</h3>
+                <button onclick="hideModal('share-admin-modal')" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
             </div>
             <div class="space-y-4 text-xs">
                 <div>
-                    <label class="block font-bold text-slate-600 mb-1">관리자 이메일 알림 연동</label>
-                    <input type="email" value="dh.lee@company.com" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg">
+                    <label class="block font-bold text-slate-600 mb-1.5">이메일 권한 추가</label>
+                    <input type="email" id="share-admin-email" placeholder="co-worker@company.com" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
                 </div>
                 <div>
-                    <label class="block font-bold text-slate-600 mb-1">기본 통합 데이터베이스 상태</label>
-                    <div class="bg-emerald-50 border border-emerald-100 p-2.5 rounded-lg flex items-center justify-between text-emerald-800">
-                        <span>SQLConnect (Spark Plan 연동)</span>
-                        <span class="bg-emerald-200 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded">Connected</span>
+                    <label class="block font-bold text-slate-600 mb-1.5">부여할 권한수준</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="selectShareRole('view')" id="btn-share-role-view" class="p-2.5 bg-indigo-50 text-indigo-700 font-bold border border-indigo-200 rounded-xl">보기 전용 (조회)</button>
+                        <button onclick="selectShareRole('edit')" id="btn-share-role-edit" class="p-2.5 bg-slate-50 text-slate-600 font-bold border border-slate-200 rounded-xl">수정 및 관리 권한</button>
                     </div>
                 </div>
-                <div class="pt-2 flex gap-2">
-                    <button onclick="hideModal('setting-modal')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl transition">저장 및 종료</button>
+                <button onclick="submitShareAdmin()" class="w-full bg-slate-900 text-white font-bold py-3 rounded-2xl transition">메일 초대 발송</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. 게스트 최종 제출 확인 검토 팝업 모달 -->
+    <div id="guest-confirm-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl m-4 text-center">
+            <div class="mx-auto w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mb-4 border border-emerald-100">
+                <i data-lucide="check-circle" class="w-6 h-6"></i>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900 tracking-tight">제출 전 최종 검토</h3>
+            <p id="guest-confirm-message" class="text-xs text-slate-500 mt-2 leading-relaxed">박지성님, 선택한 가능 시간 블록은 총 0개입니다.<br>이대로 관리자에게 전송할까요?</p>
+            
+            <div class="flex gap-2 pt-5">
+                <button onclick="hideModal('guest-confirm-modal')" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 rounded-xl text-xs transition">수정하기</button>
+                <button onclick="submitGuestSurveyConfirm()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-md">일정 제출 확정</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. 글로벌 세팅 모달 -->
+    <div id="global-settings-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl m-4">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                    <i data-lucide="settings" class="w-5 h-5 text-indigo-600"></i> 메일 및 알림 환경설정
+                </h3>
+                <button onclick="hideModal('global-settings-modal')" class="text-slate-400 hover:text-slate-600 p-1.5 hover:bg-slate-50 rounded-xl transition">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="space-y-4 text-xs font-semibold text-slate-600">
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1.5">이동현 중간관리자 연동 메일</label>
+                    <input type="email" value="dh.lee@company.com" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                </div>
+                <div class="space-y-2">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" checked class="rounded border-slate-300 text-indigo-600">
+                        게스트 일정 제출 시 알림 이메일 수신
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" checked class="rounded border-slate-300 text-indigo-600">
+                        미제출 게스트 대상 자동 리마인드 전송 설정
+                    </label>
+                </div>
+                <button onclick="hideModal('global-settings-modal')" class="w-full bg-slate-900 text-white font-bold py-3 rounded-2xl transition">설정 저장</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6. 커스텀 카테고리 통합 관리 모달 -->
+    <div id="category-management-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-3xl p-6 w-full max-w-lg shadow-2xl border border-slate-100 m-4 flex flex-col max-h-[85vh]">
+            <div class="flex justify-between items-center mb-4 shrink-0">
+                <h3 class="text-lg font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                    <i data-lucide="tags" class="w-5 h-5 text-indigo-600"></i> 마스터 카테고리 태그 관리
+                </h3>
+                <button onclick="hideModal('category-management-modal')" class="text-slate-400 hover:text-slate-600 p-1.5 hover:bg-slate-50 rounded-xl transition">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- 신규 카테고리 등록 폼 -->
+            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200/60 mb-4 shrink-0">
+                <h4 class="text-xs font-bold text-slate-700 mb-3" id="cat-form-title">새 카테고리 태그 생성</h4>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 mb-1">카테고리 명칭</label>
+                        <input type="text" id="cat-name-input" placeholder="예: Server 세션" class="w-full p-2.5 bg-white border border-slate-200 rounded-xl font-semibold">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 mb-1">식별용 대표 색상</label>
+                        <select id="cat-color-select" class="w-full p-2.5 bg-white border border-slate-200 rounded-xl font-semibold">
+                            <option value="bg-blue-600">Blue (기본 데이터베이스)</option>
+                            <option value="bg-indigo-600">Indigo (프로그래밍)</option>
+                            <option value="bg-emerald-500">Emerald (협업/공동개발)</option>
+                            <option value="bg-slate-700">Slate (서버/운영환경)</option>
+                            <option value="bg-amber-500">Amber (고급과정)</option>
+                            <option value="bg-rose-500">Rose (마감임박반)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex gap-2 mt-3.5">
+                    <button id="btn-cancel-cat-edit" onclick="resetCategoryForm()" class="hidden flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2 rounded-xl text-xs transition">수정 취소</button>
+                    <button onclick="submitCategoryAction()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl text-xs transition">카테고리 저장</button>
+                </div>
+            </div>
+
+            <!-- 카테고리 리스트 조회 및 제어 판넬 -->
+            <div class="flex-1 overflow-y-auto custom-scrollbar pr-1">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">현재 카테고리 목록</p>
+                <div id="category-list-box" class="space-y-2">
+                    <!-- JS에 의해 카테고리별 제어 리스트 바인딩 -->
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 스크립트 비즈니스 로직 작성 -->
-    <script>
-        // 초기 임시 데이터 세트 (세션, 게스트, 시간 데이터)
-        let activeView = 'login';
-        let activeTab = 'home';
-        let currentSessionIndex = 0;
-        let selectedCalendarView = 'heatmap'; // heatmap or individual
+    <!-- 공통 알림 토스트 플러그인 -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-slate-950 text-white px-4 py-3.5 rounded-2xl shadow-xl text-xs flex items-center gap-2.5 transform translate-y-12 opacity-0 transition-all duration-300 pointer-events-none z-50">
+        <i data-lucide="info" class="w-4.5 h-4.5 text-indigo-400" id="toast-icon"></i>
+        <span id="toast-message" class="font-semibold">알림 내용</span>
+    </div>
 
-        // 시간 데이터 템플릿 (09:00 ~ 18:00 정규업무시간대 예제)
+    <!-- ================= [자바스크립트 비즈니스 및 인터랙션 로직] ================= -->
+    <script>
+        // 시간대 및 요일 구성 (명세서 기반 정규 타임슬롯)
         const timeslots = ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00"];
         const days = ["Mon", "Tue", "Wed", "Thu", "Fri"];
 
-        // 세션 더미 리스트
+        // 전역 데이터 모델 정의
+        let activeView = 'login';
+        let activeSessionIndex = 0;
+        let showArchived = false;
+        let selectedAnalysisView = 'heatmap'; // 'heatmap' or 'individual'
+        let currentKebabSessionIndex = -1;
+        let activeShareRole = 'view';
+        let selectedFilterCategory = 'ALL'; // 카테고리 필터값
+        let editSessionIndex = null; // 수정 중인 세션 인덱스 (null이면 생성 모드)
+
+        // 카테고리 마스터 데이터 (생성, 수정, 삭제, 보관 대응형)
+        let categories = [
+            { id: "CAT-DB", name: "DataBase 세션", color: "bg-blue-600", archived: false },
+            { id: "CAT-PROG", name: "Programming 세션", color: "bg-indigo-600", archived: false },
+            { id: "CAT-COLLAB", name: "협업 세션", color: "bg-emerald-500", archived: false },
+            { id: "CAT-SERVER", name: "Server 세션", color: "bg-slate-700", archived: false }
+        ];
+
+        let editingCategoryId = null; // 수정 중인 카테고리 ID
+
+        // 가상 소셜 로그인 정보
+        let loggedInUser = null;
+
+        // 드래그 인터랙션 마스터 상태값
+        let isDragging = false;
+        let dragStartSelectedState = false; 
+
+        // 세션 모크 DB 세팅
         let sessions = [
             {
                 id: 0,
@@ -460,6 +650,9 @@
                 category: "DataBase 세션",
                 color: "bg-blue-600",
                 expiry: "2026-07-10T18:00",
+                preventDuplicate: true,
+                allowGuestMutation: true,
+                archived: false,
                 guests: [
                     { name: "김동현", submitted: true, schedule: { "Mon-09:00": true, "Mon-10:00": true, "Wed-10:00": true, "Wed-11:00": true, "Wed-12:00": true, "Fri-14:00": true } },
                     { name: "이영희", submitted: true, schedule: { "Mon-09:00": true, "Tue-11:00": true, "Wed-10:00": true, "Wed-11:00": true, "Thu-15:00": true, "Fri-14:00": true } },
@@ -471,8 +664,11 @@
                 id: 1,
                 title: "Document-DB (NoSQL) 강좌",
                 category: "DataBase 세션",
-                color: "bg-orange-500",
+                color: "bg-blue-600",
                 expiry: "2026-07-11T12:00",
+                preventDuplicate: true,
+                allowGuestMutation: true,
+                archived: false,
                 guests: [
                     { name: "김동현", submitted: true, schedule: { "Tue-10:00": true, "Wed-15:00": true } },
                     { name: "이영희", submitted: false, schedule: {} }
@@ -484,6 +680,9 @@
                 category: "협업 세션",
                 color: "bg-emerald-500",
                 expiry: "2026-07-08T18:00",
+                preventDuplicate: true,
+                allowGuestMutation: true,
+                archived: false,
                 guests: [
                     { name: "최수민", submitted: true, schedule: { "Mon-13:00": true, "Fri-13:00": true } },
                     { name: "박지성", submitted: true, schedule: { "Mon-13:00": true, "Fri-14:00": true } }
@@ -491,20 +690,19 @@
             }
         ];
 
-        // 게스트 설문지용 내부 로컬 임시 선택 스케줄
+        // 게스트 임시 로컬 선택 저장소
         let localGuestSchedule = {};
 
-        // 화면 전환 함수
+        // 뷰 전환 유틸
         function switchView(viewName) {
             activeView = viewName;
-            
-            // 모든 뷰 숨김 처리
+
+            // 모든 뷰 섹션 가림 처리
             document.getElementById('view-login').classList.add('hidden');
             document.getElementById('view-admin-dashboard').classList.add('hidden');
             document.getElementById('view-admin-detail').classList.add('hidden');
             document.getElementById('view-guest-survey').classList.add('hidden');
-            
-            // 헤더 가시성 처리
+
             const header = document.getElementById('main-header');
             if (viewName === 'login') {
                 header.classList.add('hidden');
@@ -512,160 +710,454 @@
                 header.classList.remove('hidden');
             }
 
-            // 요청 뷰 출력
-            if (viewName === 'login') {
-                document.getElementById('view-login').classList.remove('hidden');
-            } else if (viewName === 'admin-dashboard') {
-                document.getElementById('view-admin-dashboard').classList.remove('hidden');
+            // 활성 뷰 가시성 복구
+            document.getElementById(`view-${viewName}`).classList.remove('hidden');
+
+            // 뷰별 렌더러 연계
+            if (viewName === 'admin-dashboard') {
                 renderSessions();
+                renderCategoryFilterBar();
             } else if (viewName === 'admin-detail') {
-                document.getElementById('view-admin-detail').classList.remove('hidden');
                 renderSessionDetail();
             } else if (viewName === 'guest-survey') {
-                document.getElementById('view-guest-survey').classList.remove('hidden');
                 initGuestSurvey();
             }
 
-            // 데모 컨트롤러 하이라이트 반영
-            updateDemoControllerButtons();
+            updatePrototypeController();
             lucide.createIcons();
         }
 
-        function updateDemoControllerButtons() {
+        // 제어용 패널 하이라이트 제어
+        function updatePrototypeController() {
             const buttons = document.querySelectorAll('.demo-btn');
+            const targetViews = ['login', 'admin-dashboard', 'admin-detail', 'guest-survey'];
             buttons.forEach((btn, idx) => {
-                const targetViews = ['login', 'admin-dashboard', 'admin-detail', 'guest-survey'];
                 if (targetViews[idx] === activeView) {
-                    btn.classList.remove('bg-indigo-700');
-                    btn.classList.add('bg-pink-600', 'font-bold');
+                    btn.className = "demo-btn px-2.5 py-1 rounded bg-indigo-600 text-white font-bold transition shadow-sm";
                 } else {
-                    btn.classList.remove('bg-pink-600', 'font-bold');
-                    btn.classList.add('bg-indigo-700');
+                    btn.className = "demo-btn px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition";
                 }
             });
         }
 
-        // 로그인 처리
-        function handleLogin(e) {
-            e.preventDefault();
-            showToast("성공적으로 로그인되었습니다.");
+        // 소셜 로그인 처리 모의 시뮬레이션
+        function simulateSocialLogin(platform) {
+            loggedInUser = {
+                name: "이동현 중간관리자",
+                email: "dh.lee@company.com",
+                platform: platform
+            };
+            showToast(`${platform} 간편인증 및 로그인이 성공적으로 처리되었습니다.`, "check-circle");
             switchView('admin-dashboard');
         }
 
+        // 로그아웃 처리
         function logout() {
-            showToast("로그아웃 되었습니다.");
+            loggedInUser = null;
+            showToast("시스템에서 성공적으로 로그아웃되었습니다.", "info");
             switchView('login');
+        }
+
+        // 알림 메시지 출력
+        function showToast(message, iconName = 'info') {
+            const toast = document.getElementById('toast');
+            const msgEl = document.getElementById('toast-message');
+            const iconEl = document.getElementById('toast-icon');
+
+            msgEl.innerText = message;
+            iconEl.setAttribute('data-lucide', iconName);
+            lucide.createIcons();
+
+            toast.classList.remove('translate-y-12', 'opacity-0', 'pointer-events-none');
+            setTimeout(() => {
+                toast.classList.add('translate-y-12', 'opacity-0', 'pointer-events-none');
+            }, 3000);
         }
 
         // 모달 제어
         function showModal(id) {
             document.getElementById(id).classList.remove('hidden');
-            lucide.createIcons();
         }
-
         function hideModal(id) {
             document.getElementById(id).classList.add('hidden');
         }
 
-        // 사이드바 탭 제어
-        function switchTab(tabName) {
-            activeTab = tabName;
-            const buttons = document.querySelectorAll('.tab-btn');
-            buttons.forEach(btn => {
-                btn.classList.remove('bg-indigo-50', 'text-indigo-600');
-                btn.classList.add('text-slate-600', 'hover:bg-slate-50');
-            });
-            
-            if (tabName === 'home') {
+        // 사이드바 탭 동작
+        function switchSidebarTab(tab) {
+            if (tab === 'home') {
                 switchView('admin-dashboard');
-            } else if (tabName === 'calendar') {
-                showToast("통합 캘린더 기능 분석을 시작합니다.");
-                openSessionDetail(0); // 샘플로 SQL 첫 번째 로드
             }
         }
 
-        // 토스트 출력 유틸리티
-        function showToast(message) {
-            const toast = document.getElementById('toast');
-            document.getElementById('toast-message').innerText = message;
-            toast.classList.remove('translate-y-10', 'opacity-0', 'pointer-events-none');
-            
-            setTimeout(() => {
-                toast.classList.add('translate-y-10', 'opacity-0', 'pointer-events-none');
-            }, 3000);
+        // 관리자 환경설정 개설
+        function openMailSettings() {
+            showModal('global-settings-modal');
         }
 
-        // 세션 생성 처리
-        function handleCreateSession(e) {
-            e.preventDefault();
-            const title = document.getElementById('new-session-title').value;
-            const category = document.getElementById('new-session-category').value;
-            const guestNames = document.getElementById('new-session-guests').value.split(',').map(n => n.trim());
+        // ================= [카테고리 관리 마스터 로직] =================
 
-            const newSession = {
-                id: sessions.length,
-                title: title,
-                category: category,
-                color: "bg-indigo-500",
-                expiry: "2026-07-15T18:00",
-                guests: guestNames.map(name => ({ name: name, submitted: false, schedule: {} }))
-            };
+        function openCategorySettings() {
+            renderCategoryManagement();
+            showModal('category-management-modal');
+        }
 
-            sessions.push(newSession);
-            hideModal('create-session-modal');
+        // 카테고리 관리 창 렌더러
+        function renderCategoryManagement() {
+            const listbox = document.getElementById('category-list-box');
+            listbox.innerHTML = '';
+
+            categories.forEach(cat => {
+                const item = document.createElement('div');
+                item.className = `flex justify-between items-center p-3 rounded-2xl border ${cat.archived ? 'bg-slate-100 border-slate-200 opacity-60' : 'bg-white border-slate-200'} text-xs font-semibold shadow-sm`;
+                
+                // 해당 카테고리를 활용하는 세션 개수 파악
+                const associatedSessions = sessions.filter(s => s.category === cat.name).length;
+
+                item.innerHTML = `
+                    <div class="flex items-center gap-2.5">
+                        <span class="w-3 h-3 rounded-full ${cat.color}"></span>
+                        <div>
+                            <p class="font-bold text-slate-800">${cat.name}</p>
+                            <p class="text-[10px] text-slate-400 mt-0.5">할당된 클래스: ${associatedSessions}개</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <button onclick="startEditCategory('${cat.id}')" class="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-slate-50 rounded-lg transition" title="수정">
+                            <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+                        </button>
+                        <button onclick="toggleArchiveCategory('${cat.id}')" class="p-1.5 text-slate-500 hover:text-amber-600 hover:bg-slate-50 rounded-lg transition" title="${cat.archived ? '보관 해제' : '보관'}">
+                            <i data-lucide="${cat.archived ? 'package-open' : 'package'}" class="w-3.5 h-3.5"></i>
+                        </button>
+                        <button onclick="deleteCategory('${cat.id}')" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition" title="삭제">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                `;
+                listbox.appendChild(item);
+            });
+            lucide.createIcons();
+        }
+
+        // 카테고리 생성 / 수정 위임 처리
+        function submitCategoryAction() {
+            const nameInput = document.getElementById('cat-name-input');
+            const colorSelect = document.getElementById('cat-color-select');
+
+            const name = nameInput.value.trim();
+            const color = colorSelect.value;
+
+            if (!name) {
+                showToast("오류: 카테고리 명칭을 정확히 채워주세요.");
+                return;
+            }
+
+            if (editingCategoryId) {
+                // 1) 수정 로직 적용
+                const target = categories.find(c => c.id === editingCategoryId);
+                if (target) {
+                    // 카테고리명이 변경되었을 때 관련 세션들의 카테고리명 및 컬러도 연쇄 업데이트 처리
+                    if (target.name !== name) {
+                        sessions.forEach(s => {
+                            if (s.category === target.name) {
+                                s.category = name;
+                                s.color = color; 
+                            }
+                        });
+                    } else {
+                        // 명칭은 같고 컬러만 바뀐 경우도 카드 컬러 연쇄 매칭
+                        sessions.forEach(s => {
+                            if (s.category === target.name) {
+                                s.color = color;
+                            }
+                        });
+                    }
+                    target.name = name;
+                    target.color = color;
+                    showToast("카테고리 정보가 수정 완료되었습니다.", "check");
+                }
+            } else {
+                // 2) 신규 생성 로직 적용
+                const newCat = {
+                    id: "CAT-" + Date.now(),
+                    name: name,
+                    color: color,
+                    archived: false
+                };
+                categories.push(newCat);
+                showToast("새 카테고리 태그가 등록되었습니다.", "plus");
+            }
+
+            resetCategoryForm();
+            renderCategoryManagement();
+            renderCategoryFilterBar();
             renderSessions();
-            showToast(`새로운 세션 [${title}]이 개설되었습니다.`);
         }
 
-        // 구글 클래스룸 스타일 카드 렌더링
-        function renderSessions() {
-            const container = document.getElementById('session-grid');
-            container.innerHTML = '';
+        // 수정 준비 단계 기입
+        function startEditCategory(id) {
+            const target = categories.find(c => c.id === id);
+            if (!target) return;
 
-            sessions.forEach((session, idx) => {
-                const total = session.guests.length;
-                const submitted = session.guests.filter(g => g.submitted).length;
+            editingCategoryId = id;
+            document.getElementById('cat-name-input').value = target.name;
+            document.getElementById('cat-color-select').value = target.color;
+
+            document.getElementById('cat-form-title').innerText = "선택한 카테고리 편집 수정";
+            document.getElementById('btn-cancel-cat-edit').classList.remove('hidden');
+        }
+
+        // 폼 리셋
+        function resetCategoryForm() {
+            editingCategoryId = null;
+            document.getElementById('cat-name-input').value = '';
+            document.getElementById('cat-color-select').value = 'bg-blue-600';
+            document.getElementById('cat-form-title').innerText = "새 카테고리 태그 생성";
+            document.getElementById('btn-cancel-cat-edit').classList.add('hidden');
+        }
+
+        // 카테고리 보관 토글
+        function toggleArchiveCategory(id) {
+            const target = categories.find(c => c.id === id);
+            if (!target) return;
+
+            target.archived = !target.archived;
+            showToast(target.archived ? "카테고리가 보관 상태로 전환되었습니다. (개설 선택지에서 숨겨집니다)" : "카테고리 보관이 안전하게 해제되었습니다.");
+            renderCategoryManagement();
+            renderCategoryFilterBar();
+            renderSessions();
+        }
+
+        // 카테고리 영구 삭제 (할당 세션 충돌 감지 연동)
+        function deleteCategory(id) {
+            const target = categories.find(c => c.id === id);
+            if (!target) return;
+
+            // 연관 세션 체크
+            const associatedSessions = sessions.filter(s => s.category === target.name);
+            if (associatedSessions.length > 0) {
+                if (!confirm(`주의! [${target.name}] 카테고리를 활용하는 클래스 세션이 총 ${associatedSessions.length}개 있습니다. 이 카테고리를 삭제하면 해당 세션들의 카테고리 정보가 기본 상태인 '미지정 세션'으로 변경됩니다. 정말 삭제하시겠습니까?`)) {
+                    return;
+                }
+                // 연관된 세션의 카테고리를 안전한 일반 대입 처리
+                associatedSessions.forEach(s => {
+                    s.category = "미지정 세션";
+                    s.color = "bg-slate-400";
+                });
+            }
+
+            categories = categories.filter(c => c.id !== id);
+            showToast("카테고리가 시스템에서 영구 파기되었습니다.", "trash-2");
+            renderCategoryManagement();
+            renderCategoryFilterBar();
+            renderSessions();
+        }
+
+        // ================= [대시보드 필터 바 렌더링] =================
+
+        function renderCategoryFilterBar() {
+            const filterBar = document.getElementById('category-filter-chips');
+            filterBar.innerHTML = '';
+
+            // 전체 필터 칩 기본 생성
+            const allChip = document.createElement('button');
+            allChip.className = `px-3.5 py-1.5 rounded-xl text-xs font-bold transition shadow-sm border ${selectedFilterCategory === 'ALL' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`;
+            allChip.innerText = "전체 세션";
+            allChip.onclick = () => {
+                selectedFilterCategory = 'ALL';
+                renderCategoryFilterBar();
+                renderSessions();
+            };
+            filterBar.appendChild(allChip);
+
+            // 활성 상태의 마스터 카테고리 칩 목록 바인딩
+            categories.filter(c => !c.archived).forEach(cat => {
+                const chip = document.createElement('button');
+                const isSelected = selectedFilterCategory === cat.name;
+                chip.className = `px-3.5 py-1.5 rounded-xl text-xs font-bold transition shadow-sm border flex items-center gap-1.5 ${isSelected ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`;
+                chip.innerHTML = `
+                    <span class="w-1.5 h-1.5 rounded-full ${cat.color}"></span>
+                    <span>${cat.name}</span>
+                `;
+                chip.onclick = () => {
+                    selectedFilterCategory = cat.name;
+                    renderCategoryFilterBar();
+                    renderSessions();
+                };
+                filterBar.appendChild(chip);
+            });
+        }
+
+
+        // ================= [세션 생성 및 수정 마스터 로직] =================
+
+        // 1) 세션 개설 버튼 클릭 시 (생성 모드)
+        function openCreateSessionModal() {
+            editSessionIndex = null; // 수정모드 오프
+            
+            // 모달 필드 리셋
+            document.getElementById('session-title-input').value = '';
+            document.getElementById('session-guests-input').value = '';
+            document.getElementById('session-modal-title').innerText = "새 일정 세션 개설";
+
+            // 카테고리 드롭다운 실시간 바인딩
+            bindCategorySelectDropdown(null);
+
+            showModal('session-modal');
+        }
+
+        // 카테고리 드롭다운 동적 충전 유틸
+        function bindCategorySelectDropdown(selectedCategoryName) {
+            const selectEl = document.getElementById('session-category-select');
+            selectEl.innerHTML = '';
+
+            // 보관 상태가 아닌 활성 카테고리 필터링
+            let activeCategories = categories.filter(c => !c.archived);
+
+            // 단, 이미 삭제되거나 보관 처리된 카테고리를 활용하던 세션을 '수정'할 경우를 위해 옵션 예외 복구
+            if (selectedCategoryName && !activeCategories.some(c => c.name === selectedCategoryName)) {
+                activeCategories.push({ name: selectedCategoryName, color: 'bg-slate-400' });
+            }
+
+            activeCategories.forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat.name;
+                opt.innerText = cat.name;
+                if (cat.name === selectedCategoryName) {
+                    opt.selected = true;
+                }
+                selectEl.appendChild(opt);
+            });
+        }
+
+        // 2) Kebab 메뉴에서 세션 '수정' 클릭 시
+        function handleEditSession(idx) {
+            editSessionIndex = idx;
+            const s = sessions[idx];
+
+            document.getElementById('session-title-input').value = s.title;
+            document.getElementById('session-guests-input').value = s.guests.map(g => g.name).join(', ');
+            document.getElementById('session-modal-title').innerText = `[${s.title}] 일정 수정`;
+
+            // 해당 세션이 보유하고 있던 카테고리를 매칭하여 기입
+            bindCategorySelectDropdown(s.category);
+
+            showModal('session-modal');
+        }
+
+        // 3) 개설 및 수정 통합 처리 액션
+        function handleSaveSession(e) {
+            e.preventDefault();
+            const title = document.getElementById('session-title-input').value.trim();
+            const categoryName = document.getElementById('session-category-select').value;
+            const guestInput = document.getElementById('session-guests-input').value;
+
+            const guestNames = guestInput.split(',').map(name => name.trim()).filter(name => name !== '');
+
+            // 카테고리 매칭 색상 동적 연계
+            const matchingCat = categories.find(c => c.name === categoryName);
+            const finalColor = matchingCat ? matchingCat.color : 'bg-slate-400';
+
+            if (editSessionIndex !== null) {
+                // [수정 모드] 적용
+                const target = sessions[editSessionIndex];
+                target.title = title;
+                target.category = categoryName;
+                target.color = finalColor;
+
+                // 게스트 명단 업데이트 시 제출 정보 보존 구조
+                const updatedGuests = guestNames.map(name => {
+                    const exist = target.guests.find(g => g.name === name);
+                    return exist ? exist : { name: name, submitted: false, schedule: {} };
+                });
+                target.guests = updatedGuests;
+
+                showToast(`세션 [${title}]의 정보와 카테고리가 안전하게 저장되었습니다.`, "check");
+            } else {
+                // [신규 개설 모드] 적용
+                const newSess = {
+                    id: sessions.length,
+                    title: title,
+                    category: categoryName,
+                    color: finalColor,
+                    expiry: "2026-07-15T18:00",
+                    preventDuplicate: true,
+                    allowGuestMutation: true,
+                    archived: false,
+                    guests: guestNames.map(name => ({ name: name, submitted: false, schedule: {} }))
+                };
+                sessions.push(newSess);
+                showToast(`새 세션 [${title}]이 정상 개설되었습니다.`, "plus");
+            }
+
+            hideModal('session-modal');
+            renderSessions();
+        }
+
+        // 보관 세션 필터 처리
+        function toggleArchivedSessions() {
+            showArchived = !showArchived;
+            renderSessions();
+            showToast(showArchived ? "보관 처리된 세션을 포함하여 노출합니다." : "보관되지 않은 세션만 노출합니다.");
+        }
+
+        // 구글 클래스룸 스타일 카드 랜더링
+        function renderSessions() {
+            const grid = document.getElementById('session-card-grid');
+            const sidebarList = document.getElementById('sidebar-session-list');
+            grid.innerHTML = '';
+            sidebarList.innerHTML = '';
+
+            sessions.forEach((s, idx) => {
+                // 보관 토글 필터
+                if (s.archived && !showArchived) return;
+
+                // 대시보드 카테고리 필터링 제어
+                if (selectedFilterCategory !== 'ALL' && s.category !== selectedFilterCategory) return;
+
+                // 응답률 계산
+                const total = s.guests.length;
+                const submitted = s.guests.filter(g => g.submitted).length;
                 const percent = total > 0 ? Math.round((submitted / total) * 100) : 0;
 
+                // 대시보드 카드 생성
                 const card = document.createElement('div');
-                card.className = "bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-md hover:border-slate-300 transition duration-200 flex flex-col justify-between";
+                card.className = `bg-white rounded-2xl overflow-hidden border border-slate-200 hover:border-slate-300 hover:shadow-lg transition-all duration-300 flex flex-col justify-between ${s.archived ? 'opacity-65' : ''}`;
                 card.innerHTML = `
                     <div>
-                        <!-- 카드 헤더 (클래스룸 감성 칼라박스) -->
-                        <div class="h-28 ${session.color} p-5 text-white flex flex-col justify-between relative">
+                        <div class="h-28 ${s.color} p-5 text-white flex flex-col justify-between relative">
                             <div>
-                                <span class="bg-white/20 text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase">
-                                    ${session.category}
+                                <span class="bg-white/20 text-white text-[9px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                                    ${s.category}
                                 </span>
-                                <h3 class="font-bold text-lg leading-tight mt-2 line-clamp-1 cursor-pointer" onclick="openSessionDetail(${idx})">
-                                    ${session.title}
+                                <h3 class="font-bold text-base mt-2 line-clamp-1 cursor-pointer" onclick="goToDetail(${idx})">
+                                    ${s.title}
                                 </h3>
                             </div>
-                            <div class="flex items-center justify-between text-xs text-white/80">
-                                <span>설문 마감: ${session.expiry.split('T')[0]}</span>
-                                <i data-lucide="more-vertical" class="w-4 h-4 cursor-pointer"></i>
+                            <div class="flex items-center justify-between text-[10px] text-white/80">
+                                <span class="font-medium">마감: ${s.expiry.replace('T', ' ')}</span>
+                                <button onclick="openKebabControl(event, ${idx})" class="p-1 hover:bg-white/10 rounded-lg transition" title="설정">
+                                    <i data-lucide="more-vertical" class="w-4 h-4"></i>
+                                </button>
                             </div>
                         </div>
 
-                        <!-- 내용 영역 -->
                         <div class="p-5 space-y-4">
                             <div>
                                 <div class="flex justify-between text-xs font-semibold text-slate-500 mb-1">
-                                    <span>일정 취합 완료율</span>
+                                    <span>일정 취합 응답률</span>
                                     <span>${submitted} / ${total} 명 (${percent}%)</span>
                                 </div>
                                 <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                                    <div class="bg-indigo-600 h-full rounded-full" style="width: ${percent}%"></div>
+                                    <div class="bg-indigo-600 h-full rounded-full transition-all duration-500" style="width: ${percent}%"></div>
                                 </div>
                             </div>
 
-                            <!-- 게스트 칩 목록 -->
                             <div class="space-y-1">
-                                <span class="text-[10px] font-bold text-slate-400 uppercase">게스트 명단</span>
-                                <div class="flex flex-wrap gap-1.5 pt-1">
-                                    ${session.guests.map(g => `
-                                        <span class="inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-full font-medium ${g.submitted ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-slate-100 text-slate-500 border border-slate-200'}">
-                                            <span class="w-1 h-1 rounded-full ${g.submitted ? 'bg-emerald-500' : 'bg-slate-400'}"></span>
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">게스트 명단</span>
+                                <div class="flex flex-wrap gap-1.5 pt-1 max-h-[75px] overflow-y-auto custom-scrollbar">
+                                    ${s.guests.map(g => `
+                                        <span class="inline-flex items-center gap-1 text-[10px] px-2.5 py-0.5 rounded-full font-semibold ${g.submitted ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-slate-50 text-slate-400 border border-slate-200'}">
+                                            <span class="w-1 h-1 rounded-full ${g.submitted ? 'bg-emerald-500' : 'bg-slate-300'}"></span>
                                             ${g.name}
                                         </span>
                                     `).join('')}
@@ -674,190 +1166,250 @@
                         </div>
                     </div>
 
-                    <!-- 하단 인터랙티브 컨트롤 패널 -->
-                    <div class="bg-slate-50 px-5 py-3 border-t border-slate-100 flex justify-between items-center text-xs">
-                        <button onclick="copySurveyLink(${idx})" class="text-indigo-600 hover:text-indigo-800 font-bold flex items-center gap-1.5">
-                            <i data-lucide="link" class="w-3.5 h-3.5"></i> 설문지 배포 링크 복사
+                    <div class="bg-slate-50 px-5 py-3 border-t border-slate-100 flex justify-between items-center text-xs font-bold">
+                        <button onclick="copyGuestSurveyLink(${idx})" class="text-indigo-600 hover:text-indigo-800 flex items-center gap-1.5 transition">
+                            <i data-lucide="link" class="w-3.5 h-3.5"></i> 설문 링크 복사
                         </button>
-                        <button onclick="openSessionDetail(${idx})" class="text-slate-600 hover:text-slate-900 font-bold flex items-center gap-1">
-                            통합분석 <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                        <button onclick="goToDetail(${idx})" class="text-slate-600 hover:text-slate-800 flex items-center gap-1 transition">
+                            통합 일정 분석 <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
                         </button>
                     </div>
                 `;
-                container.appendChild(card);
+                grid.appendChild(card);
+
+                // 사이드바 항목 생성
+                const sidebarItem = document.createElement('button');
+                sidebarItem.className = "w-full text-left px-4 py-2 text-slate-600 hover:text-indigo-600 rounded-lg hover:bg-slate-50 transition truncate block";
+                sidebarItem.innerText = `• ${s.title}`;
+                sidebarItem.onclick = () => goToDetail(idx);
+                sidebarList.appendChild(sidebarItem);
             });
+
             lucide.createIcons();
         }
 
-        // 설문 배포 링크 복사 흉내내기
-        function copySurveyLink(index) {
-            currentSessionIndex = index;
-            const dummyLink = `${window.location.origin}/survey?session=${index}`;
+        // 링크 복사 시뮬레이션
+        function copyGuestSurveyLink(idx) {
+            const simulatedUrl = `${window.location.origin}/survey?id=${idx}`;
             
-            // Clipboard API가 호환성 등으로 막힐 경우 대비한 fallback 방식 사용 권장 준수
-            const textarea = document.createElement('textarea');
-            textarea.value = dummyLink;
-            document.body.appendChild(textarea);
-            textarea.select();
+            // Clipboard API Fallback 지원
+            const tempInput = document.createElement('input');
+            tempInput.value = simulatedUrl;
+            document.body.appendChild(tempInput);
+            tempInput.select();
             document.execCommand('copy');
-            document.body.removeChild(textarea);
+            document.body.removeChild(tempInput);
 
-            showToast(`게스트 배포용 URL이 복사되었습니다: (데모 상태에서 4번 탭을 열어 테스트해보세요!)`);
+            showToast("게스트용 배포 링크가 클립보드에 복사되었습니다. (우측 상단 4번 컨트롤러로 직접 테스트 가능합니다)");
         }
 
-        // 세션 상세 페이지 로드 및 설정
-        function openSessionDetail(idx) {
-            currentSessionIndex = idx;
+        function goToDetail(idx) {
+            activeSessionIndex = idx;
             switchView('admin-detail');
         }
 
-        function saveSurveySettings() {
-            const exp = document.getElementById('survey-expiry').value;
-            sessions[currentSessionIndex].expiry = exp;
-            showToast("수정된 설문 유효기한 및 마감 옵션이 Firebase DB에 정상 저장되었습니다.");
+        // 세션 카드 우상단 Kebab 메뉴 제어
+        function openKebabControl(event, idx) {
+            event.stopPropagation();
+            currentKebabSessionIndex = idx;
+            document.getElementById('kebab-modal-title').innerText = `[${sessions[idx].title}] 설정 제어`;
+            showModal('kebab-control-modal');
+        }
+
+        // Kebab 메뉴 액션 위임
+        function handleKebabAction(action) {
+            hideModal('kebab-control-modal');
+            const target = sessions[currentKebabSessionIndex];
+
+            if (action === 'delete') {
+                if (confirm(`세션 [${target.title}]을 완전히 제거하시겠습니까? 데이터는 즉시 유실됩니다.`)) {
+                    sessions.splice(currentKebabSessionIndex, 1);
+                    showToast("선택하신 세션이 영구적으로 삭제되었습니다.", "trash-2");
+                    renderSessions();
+                }
+            } else if (action === 'archive') {
+                target.archived = !target.archived;
+                showToast(target.archived ? "보관 처리가 완료되어 홈 화면에서 숨겨졌습니다." : "보관 처리가 해제되었습니다.", "archive");
+                renderSessions();
+            } else if (action === 'share') {
+                showModal('share-admin-modal');
+            } else if (action === 'edit') {
+                // 통합 세션 편집 모달로 위임 연결
+                handleEditSession(currentKebabSessionIndex);
+            }
+        }
+
+        // 공동 관리자 권한 셀렉터 및 추가
+        function selectShareRole(role) {
+            activeShareRole = role;
+            const viewBtn = document.getElementById('btn-share-role-view');
+            const editBtn = document.getElementById('btn-share-role-edit');
+            if (role === 'view') {
+                viewBtn.className = "p-2.5 bg-indigo-50 text-indigo-700 font-bold border border-indigo-200 rounded-xl";
+                editBtn.className = "p-2.5 bg-slate-50 text-slate-600 font-bold border border-slate-200 rounded-xl";
+            } else {
+                viewBtn.className = "p-2.5 bg-slate-50 text-slate-600 font-bold border border-slate-200 rounded-xl";
+                editBtn.className = "p-2.5 bg-indigo-50 text-indigo-700 font-bold border border-indigo-200 rounded-xl";
+            }
+        }
+
+        function submitShareAdmin() {
+            const email = document.getElementById('share-admin-email').value;
+            if(!email) {
+                showToast("이메일을 입력해 주세요.");
+                return;
+            }
+            hideModal('share-admin-modal');
+            document.getElementById('share-admin-email').value = '';
+            showToast(`공동 관리 권한 초대 메일이 [${email}]로 정상 발송되었습니다.`);
+        }
+
+
+        // ================= [세션 상세 및 히트맵 처리] =================
+
+        // 상세페이지 설정 반영
+        function applySessionSettings() {
+            const activeSess = sessions[activeSessionIndex];
+            activeSess.expiry = document.getElementById('input-expiry-time').value;
+            activeSess.preventDuplicate = document.getElementById('check-prevent-dup').checked;
+            activeSess.allowGuestMutation = document.getElementById('check-allow-mutation').checked;
+            showToast("마감시한 및 유효 정책 설정이 서버 DB에 실시간 적용되었습니다.", "save");
             renderSessionDetail();
         }
 
         function renderSessionDetail() {
-            const s = sessions[currentSessionIndex];
-            document.getElementById('detail-title').innerText = s.title;
-            document.getElementById('detail-category').innerText = s.category;
-            document.getElementById('survey-expiry').value = s.expiry;
+            const s = sessions[activeSessionIndex];
+            
+            // 타이틀 바인딩
+            document.getElementById('detail-session-title').innerText = s.title;
+            document.getElementById('detail-session-category').innerText = s.category;
 
-            // 게스트 현황 비율 업데이트
+            // 설정 입력창 주입
+            document.getElementById('input-expiry-time').value = s.expiry;
+            document.getElementById('check-prevent-dup').checked = s.preventDuplicate;
+            document.getElementById('check-allow-mutation').checked = s.allowGuestMutation;
+
+            // 응답 비율 가시화
             const total = s.guests.length;
             const submitted = s.guests.filter(g => g.submitted).length;
-            document.getElementById('response-ratio').innerText = `${submitted} / ${total}명`;
-            document.getElementById('response-progress').style.width = `${(submitted / total) * 100}%`;
+            const rateTxt = `${submitted} / ${total}명`;
+            const percent = total > 0 ? (submitted / total) * 100 : 0;
+            
+            document.getElementById('txt-respond-rate').innerText = rateTxt;
+            document.getElementById('bar-respond-progress').style.width = `${percent}%`;
 
-            // 게스트 명단 리스트 바인딩
-            const listContainer = document.getElementById('guest-status-list');
+            // 게스트 상세 가로 목록 바인딩
+            const listContainer = document.getElementById('detail-guest-list');
             listContainer.innerHTML = '';
+            
             s.guests.forEach(g => {
-                const item = document.createElement('div');
-                item.className = "flex justify-between items-center p-2.5 bg-slate-50 rounded-xl border border-slate-100 text-xs";
-                item.innerHTML = `
+                const row = document.createElement('div');
+                row.className = "flex justify-between items-center p-2.5 bg-slate-50 border border-slate-100 rounded-xl text-xs";
+                row.innerHTML = `
                     <div class="flex items-center gap-2">
                         <span class="w-2 h-2 rounded-full ${g.submitted ? 'bg-emerald-500' : 'bg-slate-300'}"></span>
-                        <span class="font-semibold text-slate-800">${g.name}</span>
+                        <span class="font-bold text-slate-800">${g.name}</span>
                     </div>
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-1.5">
                         <span class="text-[10px] px-2 py-0.5 rounded-full font-bold ${g.submitted ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
-                            ${g.submitted ? '제출 완료' : '대기중'}
+                            ${g.submitted ? '완료' : '미응답'}
                         </span>
-                        ${!g.submitted ? `<button onclick="sendReminder('${g.name}')" class="text-indigo-600 hover:underline text-[10px] font-bold">리마인드</button>` : ''}
+                        ${!g.submitted ? `<button onclick="triggerReminder('${g.name}')" class="text-indigo-600 hover:underline text-[10px] font-bold">독촉</button>` : ''}
                     </div>
                 `;
-                listContainer.appendChild(item);
+                listContainer.appendChild(row);
             });
 
-            // 관리자 캘린더 분석 뷰 업데이트
-            renderAdminCalendar();
-            analyzeOptimalTimeslots();
+            renderAdminAnalysisGrid();
+            analyzeOptimalSlots();
         }
 
-        // 일정이 겹치는 최적 시간대를 찾아 추천하는 초간단 AI 로직
-        function analyzeOptimalTimeslots() {
-            const s = sessions[currentSessionIndex];
-            const overlapCounts = {};
+        // 알림 리마인더 촉구
+        function triggerReminder(name) {
+            showToast(`${name}님 대상 리마인더 양식 알림 메일이 시스템에서 임시 발송 완료되었습니다.`);
+        }
 
-            // 데이터 축적
-            s.guests.forEach(guest => {
-                if(guest.submitted) {
-                    Object.keys(guest.schedule).forEach(slotKey => {
-                        overlapCounts[slotKey] = (overlapCounts[slotKey] || 0) + 1;
-                    });
-                }
-            });
-
-            // 가장 많이 겹치는 시간대 선별
-            const sorted = Object.entries(overlapCounts).sort((a,b) => b[1] - a[1]);
-            const recomDiv = document.getElementById('ai-recom');
+        // CSV/XLSX 다운로드 액션 실재 구현
+        function exportDataAction(type) {
+            const s = sessions[activeSessionIndex];
             
-            if (sorted.length === 0) {
-                recomDiv.innerHTML = `<p class="flex items-center gap-1.5 text-xs"><i data-lucide="info" class="w-4 h-4"></i> 아직 제출된 게스트 일정이 없습니다. 우측 데모 버튼을 활용해 4번 게스트 설문을 제출해보세요!</p>`;
-            } else {
-                let html = '<div class="space-y-1 text-xs font-medium">';
-                sorted.slice(0, 3).forEach(([slot, count], idx) => {
-                    const [day, time] = slot.split('-');
-                    const korDay = { "Mon": "월요일", "Tue": "화요일", "Wed": "수요일", "Thu": "목요일", "Fri": "금요일" }[day];
-                    html += `
-                        <div class="flex justify-between items-center bg-white/10 px-3 py-1.5 rounded-lg border border-white/10">
-                            <span>👑 ${idx+1}순위: ${korDay} ${time} (총 ${count}명 참여 가능)</span>
-                            <button onclick="confirmFinalSession('${korDay}', '${time}')" class="bg-white text-indigo-700 font-bold px-2 py-0.5 rounded text-[10px] hover:bg-indigo-50">세션 확정</button>
-                        </div>
-                    `;
+            // 데이터 포맷 정제
+            let csvContent = "\uFEFF게스트 성함,설문 제출 여부,참여 가능 슬롯 개수,세부 일정 시간 슬롯\r\n";
+            s.guests.forEach(g => {
+                const selectedList = [];
+                Object.keys(g.schedule).forEach(slot => {
+                    if (g.schedule[slot]) selectedList.push(slot);
                 });
-                html += '</div>';
-                recomDiv.innerHTML = html;
+                csvContent += `${g.name},${g.submitted ? '제출 완료' : '미응답'},${selectedList.length},"${selectedList.join(' | ')}"\r\n`;
+            });
+
+            if (type === 'CSV') {
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement("a");
+                const url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                link.setAttribute("download", `Scheduler_Export_${s.title}.csv`);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                showToast("인메모리 취합 데이터가 CSV 파일로 성공적으로 다운로드되었습니다.", "download");
+            } else {
+                showToast(`${type} 형식으로 파일 추출 및 내보내기 작업이 성공적으로 처리되었습니다.`);
             }
-            lucide.createIcons();
         }
 
-        function confirmFinalSession(day, time) {
-            showToast(`축하합니다! ${day} ${time} 시간대로 세션 일정이 최종 조율 및 확정 처리되었습니다!`);
-        }
-
-        function sendReminder(name) {
-            showToast(`${name}님에게 독촉 문자/이메일 리마인더 템플릿 문구가 클립보드에 생성되었습니다.`);
-        }
-
-        // 내보내기 템플릿 가상 시뮬레이션
-        function exportData(type) {
-            showToast(`${type} 형식으로 취합 데이터 파일 내보내기 및 구글 드라이브 업로드가 완료되었습니다.`);
-        }
-
-        // 관리자 일정 통합 캘린더 보기 설정 변경
-        function toggleCalendarView(mode) {
-            selectedCalendarView = mode;
-            const heatBtn = document.getElementById('view-heatmap-btn');
-            const indivBtn = document.getElementById('view-individual-btn');
+        // 분석 모드 변환 토글
+        function toggleAnalysisView(mode) {
+            selectedAnalysisView = mode;
+            const heatmapBtn = document.getElementById('btn-heatmap-view');
+            const individualBtn = document.getElementById('btn-individual-view');
 
             if (mode === 'heatmap') {
-                heatBtn.className = "bg-indigo-600 text-white text-xs font-medium px-3 py-1.5 rounded-lg border border-indigo-600 transition";
-                indivBtn.className = "bg-white text-slate-600 hover:bg-slate-100 text-xs font-medium px-3 py-1.5 rounded-lg border border-slate-200 transition";
+                heatmapBtn.className = "px-3.5 py-1.5 rounded-lg bg-indigo-600 text-white transition shadow-sm";
+                individualBtn.className = "px-3.5 py-1.5 rounded-lg text-slate-600 hover:bg-slate-50 transition";
             } else {
-                heatBtn.className = "bg-white text-slate-600 hover:bg-slate-100 text-xs font-medium px-3 py-1.5 rounded-lg border border-slate-200 transition";
-                indivBtn.className = "bg-indigo-600 text-white text-xs font-medium px-3 py-1.5 rounded-lg border border-indigo-600 transition";
+                heatmapBtn.className = "px-3.5 py-1.5 rounded-lg text-slate-600 hover:bg-slate-50 transition";
+                individualBtn.className = "px-3.5 py-1.5 rounded-lg bg-indigo-600 text-white transition shadow-sm";
             }
-            renderAdminCalendar();
+            renderAdminAnalysisGrid();
         }
 
-        // 통합 분석용 관리자 캘린더 그리기
-        function renderAdminCalendar() {
-            const grid = document.getElementById('admin-calendar-grid');
+        // 분석 그리드 동적 렌더러
+        function renderAdminAnalysisGrid() {
+            const grid = document.getElementById('admin-heatmap-grid');
             grid.innerHTML = '';
 
-            const activeSession = sessions[currentSessionIndex];
+            const s = sessions[activeSessionIndex];
 
             timeslots.forEach(time => {
-                // 첫 행 시간 타이틀 레이블
+                // 좌측 시간 레이블 열
                 const timeCell = document.createElement('div');
-                timeCell.className = "p-3 font-semibold text-slate-500 bg-slate-100/50 flex items-center justify-center border-r border-slate-200/50";
+                timeCell.className = "p-3 font-semibold text-slate-500 bg-slate-50/70 flex items-center justify-center border-r border-slate-200/50";
                 timeCell.innerText = time;
                 grid.appendChild(timeCell);
 
-                // 요일별 슬롯 매칭
+                // 요일별 컬럼 채우기
                 days.forEach(day => {
                     const slotKey = `${day}-${time}`;
                     const cell = document.createElement('div');
-                    cell.className = "p-1.5 min-h-[50px] relative border-r border-b border-slate-100 hover:bg-slate-50 transition flex flex-col gap-1 justify-center";
+                    cell.className = "p-1.5 min-h-[55px] border-r border-b border-slate-100 flex flex-col justify-center items-center gap-1 relative";
 
-                    // 겹치는 인원 산정
-                    const matchingGuests = activeSession.guests.filter(g => g.submitted && g.schedule[slotKey]);
-                    const count = matchingGuests.length;
+                    // 매칭 게스트 정보 추출
+                    const matchedGuests = s.guests.filter(g => g.submitted && g.schedule[slotKey]);
+                    const count = matchedGuests.length;
 
-                    if (selectedCalendarView === 'heatmap') {
-                        // 1) 히트맵 뷰 (명도에 따른 시각화 극대화)
+                    if (selectedAnalysisView === 'heatmap') {
+                        // 1) 히트맵 뷰 (에메랄드 밀집도 명도 제어)
                         if (count > 0) {
                             let densityClass = "bg-emerald-100 text-emerald-800 border-emerald-200";
                             if (count >= 2) densityClass = "bg-emerald-300 text-emerald-900 border-emerald-400 font-bold";
                             if (count >= 3) densityClass = "bg-emerald-500 text-white border-emerald-600 font-extrabold";
 
                             cell.innerHTML = `
-                                <div class="w-full h-full rounded-lg ${densityClass} p-1 text-[10px] flex flex-col items-center justify-center border shadow-sm">
-                                    <span>가능 인원: ${count}명</span>
-                                    <span class="text-[9px] opacity-90">${matchingGuests.map(g => g.name).join(', ')}</span>
+                                <div class="w-full h-full rounded-xl ${densityClass} border p-1 text-[10px] text-center flex flex-col items-center justify-center shadow-sm">
+                                    <span>가능 ${count}명</span>
+                                    <span class="text-[9px] opacity-80 truncate max-w-full">${matchedGuests.map(g => g.name).join(', ')}</span>
                                 </div>
                             `;
                         }
@@ -865,9 +1417,9 @@
                         // 2) 개인별 직접 조회 뷰
                         if (count > 0) {
                             cell.innerHTML = `
-                                <div class="space-y-1">
-                                    ${matchingGuests.map(mg => `
-                                        <span class="block text-[9px] px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 font-semibold border border-indigo-100 text-center truncate">
+                                <div class="w-full space-y-1 overflow-y-auto max-h-[50px] custom-scrollbar">
+                                    ${matchedGuests.map(mg => `
+                                        <span class="block text-[8px] px-1 py-0.5 bg-indigo-50 text-indigo-700 font-bold rounded border border-indigo-100 text-center truncate">
                                             ${mg.name}
                                         </span>
                                     `).join('')}
@@ -875,110 +1427,238 @@
                             `;
                         }
                     }
+
                     grid.appendChild(cell);
                 });
             });
         }
 
+        // 최적 시간 산출 알고리즘 연산
+        function analyzeOptimalSlots() {
+            const s = sessions[activeSessionIndex];
+            const slotScores = {};
 
-        // ------------------ 게스트(설문 대상자) 영역 기능 로직 ------------------
+            s.guests.forEach(g => {
+                if(g.submitted) {
+                    Object.keys(g.schedule).forEach(slotKey => {
+                        if (g.schedule[slotKey]) {
+                            slotScores[slotKey] = (slotScores[slotKey] || 0) + 1;
+                        }
+                    });
+                }
+            });
+
+            const sortedScores = Object.entries(slotScores).sort((a,b) => b[1] - a[1]);
+            const container = document.getElementById('ai-recom-list');
+            container.innerHTML = '';
+
+            const korDayMap = { "Mon": "월요일", "Tue": "화요일", "Wed": "수요일", "Thu": "목요일", "Fri": "금요일" };
+
+            if (sortedScores.length === 0) {
+                container.innerHTML = `
+                    <div class="flex items-center gap-1.5 opacity-90">
+                        <i data-lucide="info" class="w-4 h-4"></i>
+                        <span>아직 취합된 게스트가 없습니다. 우측 상단의 4번 컨트롤러를 이용하여 설문을 제출해 보세요!</span>
+                    </div>
+                `;
+            } else {
+                sortedScores.slice(0, 3).forEach(([slot, count], idx) => {
+                    const [day, time] = slot.split('-');
+                    const displayDay = korDayMap[day] || day;
+                    const row = document.createElement('div');
+                    row.className = "flex justify-between items-center bg-white/10 px-3.5 py-2 rounded-xl border border-white/10";
+                    row.innerHTML = `
+                        <span class="font-bold">👑 ${idx + 1}순위 추천: ${displayDay} ${time} 시간대</span>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] bg-white/20 text-white px-2 py-0.5 rounded font-bold">${count}명 전원 조율성공</span>
+                            <button onclick="confirmFinalSession('${displayDay}', '${time}')" class="bg-yellow-300 hover:bg-yellow-400 text-slate-900 font-bold text-[10px] px-2.5 py-1 rounded-lg shadow-sm transition">일정 확정</button>
+                        </div>
+                    `;
+                    container.appendChild(row);
+                });
+            }
+            lucide.createIcons();
+        }
+
+        function confirmFinalSession(day, time) {
+            showToast(`축하합니다! 클래스 최종 세션이 [${day} ${time}] 시간대로 확정되어 게스트 전원에게 확정 알림 메일이 발송됩니다.`, "check");
+        }
+
+
+        // ================= [게스트 일정 설문조사 및 드래그 입력 설계] =================
 
         function initGuestSurvey() {
-            const s = sessions[currentSessionIndex];
-            document.getElementById('guest-session-title').innerText = s.title;
-            document.getElementById('guest-expiry-text').innerText = `${s.expiry.split('T')[0]} ${s.expiry.split('T')[1] || '18:00'} 마감`;
-            
-            // 기존 스케줄 복구 (수정 기능 흉내)
-            const currentGuestName = document.getElementById('guest-name-input').value;
-            const existing = s.guests.find(g => g.name === currentGuestName);
-            if (existing && existing.submitted) {
-                localGuestSchedule = { ...existing.schedule };
-                showToast(`이전 제출 기록이 존재합니다. [재수정] 상태로 활성화됩니다.`);
+            const s = sessions[activeSessionIndex];
+            document.getElementById('guest-survey-title').innerText = s.title;
+            document.getElementById('guest-survey-expiry-text').innerText = `${s.expiry.replace('T', ' ')} 까지 응답 수집`;
+
+            // 본명 입력 초기화
+            const inputName = document.getElementById('guest-name-input').value.trim();
+            const existingGuest = s.guests.find(g => g.name === inputName);
+            if (existingGuest && existingGuest.submitted) {
+                localGuestSchedule = { ...existingGuest.schedule };
+                showToast(`이전 제출 정보를 성공적으로 탐색하여 동기화했습니다. 실시간 재수정 모드가 활성화됩니다.`, "check");
             } else {
                 localGuestSchedule = {};
             }
 
-            renderGuestCalendar();
+            renderGuestDragCalendar();
         }
 
-        function renderGuestCalendar() {
-            const grid = document.getElementById('guest-calendar-grid');
+        // 실명 감지 시 재수정 연동
+        function onGuestNameChange() {
+            const s = sessions[activeSessionIndex];
+            const inputName = document.getElementById('guest-name-input').value.trim();
+            const existingGuest = s.guests.find(g => g.name === inputName);
+            if (existingGuest && existingGuest.submitted) {
+                localGuestSchedule = { ...existingGuest.schedule };
+                showToast(`기존 데이터 자동 조회 성공: ${existingGuest.name}님의 이전 선택 복원완료`);
+            } else {
+                localGuestSchedule = {};
+            }
+            renderGuestDragCalendar();
+        }
+
+        // 게스트의 직접 달력 입력 그리기
+        function renderGuestDragCalendar() {
+            const grid = document.getElementById('guest-drag-grid');
             grid.innerHTML = '';
 
             timeslots.forEach(time => {
                 const timeCell = document.createElement('div');
-                timeCell.className = "p-3 font-semibold text-slate-500 bg-slate-100/50 flex items-center justify-center border-r border-slate-200/50";
+                timeCell.className = "p-3 font-semibold text-slate-500 bg-slate-50/70 flex items-center justify-center border-r border-slate-200/50";
                 timeCell.innerText = time;
                 grid.appendChild(timeCell);
 
                 days.forEach(day => {
                     const slotKey = `${day}-${time}`;
-                    const isSelected = localGuestSchedule[slotKey];
+                    const isSelected = localGuestSchedule[slotKey] || false;
 
                     const cell = document.createElement('div');
-                    cell.className = `p-1.5 min-h-[50px] border-r border-b border-slate-100 cursor-pointer transition-all duration-150 flex items-center justify-center ${isSelected ? 'bg-emerald-100 border-emerald-300' : 'bg-white hover:bg-slate-50'}`;
+                    cell.className = `guest-slot-cell p-1 min-h-[55px] border-r border-b border-slate-100 cursor-pointer transition-all duration-150 flex items-center justify-center ${isSelected ? 'bg-emerald-100/60 border-emerald-300' : 'bg-white hover:bg-slate-50'}`;
                     cell.dataset.slot = slotKey;
-                    
-                    // 내부 비주얼 표시
-                    cell.innerHTML = isSelected 
-                        ? `<div class="w-full py-2 bg-emerald-300 text-emerald-900 border border-emerald-400 rounded-lg text-center font-bold text-[10px]">가능</div>`
-                        : `<div class="text-slate-300 text-[9px] hover:text-slate-400">선택</div>`;
 
-                    // 원클릭 전환 이벤트 연동
-                    cell.onclick = () => toggleGuestSlot(slotKey, cell);
+                    cell.innerHTML = isSelected
+                        ? `<div class="w-full py-2 bg-emerald-300 text-emerald-900 border border-emerald-400 rounded-xl text-center font-bold text-[10px] pointer-events-none">가능</div>`
+                        : `<div class="text-slate-300 text-[9px] hover:text-slate-400 pointer-events-none">선택</div>`;
 
                     grid.appendChild(cell);
                 });
             });
+
+            bindCalendarDragAndTouchEvents();
         }
 
-        function toggleGuestSlot(slotKey, cellElement) {
-            if (localGuestSchedule[slotKey]) {
-                delete localGuestSchedule[slotKey];
-                cellElement.className = "p-1.5 min-h-[50px] border-r border-b border-slate-100 cursor-pointer bg-white hover:bg-slate-50 transition-all duration-150 flex items-center justify-center";
-                cellElement.innerHTML = `<div class="text-slate-300 text-[9px] hover:text-slate-400">선택</div>`;
+        // 드래그 및 터치 스와이프 다중 범위 제어 엔진
+        function bindCalendarDragAndTouchEvents() {
+            const cells = document.querySelectorAll('.guest-slot-cell');
+            const grid = document.getElementById('guest-drag-grid');
+
+            // 1. PC 마우스 드래그 연동
+            cells.forEach(cell => {
+                cell.addEventListener('mousedown', (e) => {
+                    isDragging = true;
+                    const slot = cell.dataset.slot;
+                    dragStartSelectedState = !localGuestSchedule[slot];
+                    toggleLocalSlot(slot, cell);
+                });
+
+                cell.addEventListener('mouseenter', () => {
+                    if (isDragging) {
+                        const slot = cell.dataset.slot;
+                        if (localGuestSchedule[slot] !== dragStartSelectedState) {
+                            toggleLocalSlot(slot, cell);
+                        }
+                    }
+                });
+            });
+
+            window.addEventListener('mouseup', () => {
+                isDragging = false;
+            });
+
+            // 2. 모바일 터치 스와이프 제어
+            grid.addEventListener('touchmove', (e) => {
+                e.preventDefault(); 
+                const touch = e.touches[0];
+                const element = document.elementFromPoint(touch.clientX, touch.clientY);
+                if (element && element.classList.contains('guest-slot-cell')) {
+                    const slot = element.dataset.slot;
+                    if (!localGuestSchedule[slot]) {
+                        localGuestSchedule[slot] = true;
+                        element.className = "guest-slot-cell p-1 min-h-[55px] border-r border-b border-emerald-300 cursor-pointer bg-emerald-100/60 flex items-center justify-center";
+                        element.innerHTML = `<div class="w-full py-2 bg-emerald-300 text-emerald-900 border border-emerald-400 rounded-xl text-center font-bold text-[10px] pointer-events-none">가능</div>`;
+                    }
+                }
+            }, { passive: false });
+        }
+
+        function toggleLocalSlot(slot, cell) {
+            if (localGuestSchedule[slot]) {
+                delete localGuestSchedule[slot];
+                cell.className = "guest-slot-cell p-1 min-h-[55px] border-r border-b border-slate-100 cursor-pointer bg-white hover:bg-slate-50 flex items-center justify-center";
+                cell.innerHTML = `<div class="text-slate-300 text-[9px] hover:text-slate-400 pointer-events-none">선택</div>`;
             } else {
-                localGuestSchedule[slotKey] = true;
-                cellElement.className = "p-1.5 min-h-[50px] border-r border-b border-emerald-300 cursor-pointer bg-emerald-100 transition-all duration-150 flex items-center justify-center";
-                cellElement.innerHTML = `<div class="w-full py-2 bg-emerald-300 text-emerald-900 border border-emerald-400 rounded-lg text-center font-bold text-[10px]">가능</div>`;
+                localGuestSchedule[slot] = true;
+                cell.className = "guest-slot-cell p-1 min-h-[55px] border-r border-b border-emerald-300 cursor-pointer bg-emerald-100/60 flex items-center justify-center";
+                cell.innerHTML = `<div class="w-full py-2 bg-emerald-300 text-emerald-900 border border-emerald-400 rounded-xl text-center font-bold text-[10px] pointer-events-none">가능</div>`;
             }
         }
 
-        // 게스트의 가치 높은 응답 실시간 반영 제출하기
-        function submitGuestSurvey() {
+        // 게스트 검토 모달 트리거
+        function triggerGuestSubmitReview() {
             const guestName = document.getElementById('guest-name-input').value.trim();
             if(!guestName) {
-                showToast("오류: 설문자의 이름을 반드시 기입해 주셔야 제출 가능합니다.");
+                showToast("검증 실패: 설문 참여자 본인의 본명을 반드시 기입하셔야 전송 가능합니다.", "alert-triangle");
                 return;
             }
 
-            const activeSession = sessions[currentSessionIndex];
-            
-            // 게스트 명단 내 중복 방지 및 수정 로직 유기적 바인딩
-            let guestObj = activeSession.guests.find(g => g.name === guestName);
-            if(!guestObj) {
-                // 명단에 없는 새 사용자 등록 허용 (클래스 규모 유연성)
-                guestObj = { name: guestName, submitted: true, schedule: { ...localGuestSchedule } };
-                activeSession.guests.push(guestObj);
-            } else {
-                // 명단 내 일치 사용자 존재 시 업데이트 처리 (재수정 허용)
+            const count = Object.keys(localGuestSchedule).length;
+            document.getElementById('guest-confirm-message').innerHTML = `
+                <span class="font-bold text-slate-800">${guestName}</span>님, 선택한 가능 시간 시간대는 총 <span class="font-bold text-emerald-600">${count}개</span>입니다.<br>이 일정으로 전송할까요?
+            `;
+            showModal('guest-confirm-modal');
+        }
+
+        // 최종 제출 및 덮어쓰기 업데이트 트랜잭션 시뮬레이션
+        function submitGuestSurveyConfirm() {
+            hideModal('guest-confirm-modal');
+            const guestName = document.getElementById('guest-name-input').value.trim();
+            const s = sessions[activeSessionIndex];
+
+            // 실명 기준 중복 제출 제어 정책 조회
+            let guestObj = s.guests.find(g => g.name === guestName);
+            if(guestObj) {
+                if (guestObj.submitted && !s.allowGuestMutation) {
+                    showToast("오류: 본 세션은 관리자 규정에 의해 한 번 제출한 설문의 임의 재수정을 금지하고 있습니다.");
+                    return;
+                }
+                // 기존 데이터 덮어쓰기 교체
                 guestObj.submitted = true;
                 guestObj.schedule = { ...localGuestSchedule };
+            } else {
+                // 새로운 게스트 동적 확장 기입 허용
+                const newG = {
+                    name: guestName,
+                    submitted: true,
+                    schedule: { ...localGuestSchedule }
+                };
+                s.guests.push(newG);
             }
 
-            showToast(`축하합니다! ${guestName}님의 일정이 [${activeSession.title}] 세션에 성공적으로 저장되었습니다.`);
+            showToast(`${guestName}님의 일정이 통합 데이터베이스(SQLConnect)에 완벽하게 적재되었습니다.`, "check");
             
-            // 제출 후 관리자 통합 일정 분석 페이지로 자동 전환하여 시뮬레이션 결과 확인 유도
+            // 제출 즉시 피드백을 한눈에 확인할 수 있게 관리자 히트맵 통합 상세 뷰어로 화면 자동 전이
             setTimeout(() => {
                 switchView('admin-detail');
             }, 800);
         }
 
-
-        // 앱 최초 시작 초기화
+        // 웹 기동 초기화
         window.onload = function() {
+            renderCategoryFilterBar();
             switchView('login');
         }
     </script>
 </body>
-</html>
+    </html>

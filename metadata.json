@@ -1,6 +1,6 @@
 {
-  "name": "Scheduler Release",
-  "description": "정기 오케스트라 합주, 클래스 세션 일정 조율 및 통합 관리 시스템 (Go Backend & React Frontend)",
+  "name": "Scheduler",
+  "description": "정기 오케스트라 합주, 클래스 세션 일정 조율 및 통합 관리 시스템",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

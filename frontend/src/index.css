@@ -1,0 +1,94 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", "Noto Sans KR", sans-serif;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: #f8fafc;
+  overscroll-behavior-y: none;
+}
+
+.no-select {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 8px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 8px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Sticky calendar grid layouts */
+.time-col-sticky {
+  position: sticky;
+  left: 0;
+  background-color: #f8fafc;
+  z-index: 20;
+  border-right: 2px solid #e2e8f0;
+}
+
+.header-row-sticky {
+  position: sticky;
+  top: 0;
+  background-color: #ffffff;
+  z-index: 30;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.header-corner-sticky {
+  position: sticky;
+  top: 0;
+  left: 0;
+  background-color: #f8fafc;
+  z-index: 40;
+  border-right: 2px solid #e2e8f0;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.guest-slot-cell {
+  position: relative;
+  transition: background-color 0.15s, transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.hold-indicator {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 4px;
+  background-color: #10B981;
+  width: 0%;
+  transition: width 0.5s linear;
+  pointer-events: none;
+}
+
+.guest-slot-cell.holding .hold-indicator {
+  width: 100%;
+}
+
+.guest-slot-cell.expanded {
+  transform: scale(1.15);
+  z-index: 45;
+  box-shadow: 0 10px 20px -3px rgba(16, 185, 129, 0.3);
+  border: 2px solid #10B981 !important;
+  border-radius: 6px;
+}
+
+.cell-content {
+  position: relative;
+  z-index: 10;
+  pointer-events: none;
+}

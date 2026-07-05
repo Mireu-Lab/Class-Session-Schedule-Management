@@ -7,18 +7,20 @@ export interface SnsAccount {
 export interface Category {
   id: string;
   name: string;
+  email?: string;
   color: string;
   archived: boolean;
 }
 
 export interface Guest {
   name: string;
+  email?: string;
   submitted: boolean;
   schedule: Record<string, boolean>; // key format: `W[week_num]-[day_name]-[time_slot]` e.g. "W1-화-18:00"
 }
 
 export interface Session {
-  id: number;
+  id: string | number;
   title: string;
   category: string;
   color: string;
@@ -27,7 +29,7 @@ export interface Session {
   time_interval: number; // 30, 60, 120 (in minutes)
   guestMode: 'unspecified' | 'specified';
   status: '조율 중' | '확정';
-  confirmedSlot: string | null;
+  confirmedSlot: string | string[] | null;
   is_deleted: boolean;
   archived: boolean;
   duration: '1week' | '4weeks';

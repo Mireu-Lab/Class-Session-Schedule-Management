@@ -1,0 +1,52 @@
+{
+  "entities": {
+    "Session": {
+      "title": "Session",
+      "description": "일정 조율 세션 데이터",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "category": { "type": "string" },
+        "color": { "type": "string" },
+        "startDate": { "type": "string" },
+        "endDate": { "type": "string" },
+        "time_interval": { "type": "number" },
+        "guestMode": { "type": "string", "enum": ["unspecified", "specified"] },
+        "status": { "type": "string", "enum": ["조율 중", "확정"] },
+        "confirmedSlot": { "type": "string" },
+        "is_deleted": { "type": "boolean" },
+        "archived": { "type": "boolean" },
+        "duration": { "type": "string" },
+        "guests": { "type": "array" },
+        "expiry": { "type": "string" },
+        "preventDuplicate": { "type": "boolean" },
+        "allowGuestMutation": { "type": "boolean" },
+        "adminEmails": { "type": "array" },
+        "viewerEmails": { "type": "array" }
+      },
+      "required": ["title", "startDate", "endDate"]
+    },
+    "Category": {
+      "title": "Category",
+      "description": "세션 카테고리 태그 정보",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "color": { "type": "string" },
+        "archived": { "type": "boolean" }
+      },
+      "required": ["id", "name", "color", "archived"]
+    }
+  },
+  "firestore": {
+    "sessions/{sessionId}": {
+      "schema": { "$ref": "#/entities/Session" },
+      "description": "사용자가 생성한 세션 목록"
+    },
+    "categories/{categoryId}": {
+      "schema": { "$ref": "#/entities/Category" },
+      "description": "세션 카테고리 목록"
+    }
+  }
+}

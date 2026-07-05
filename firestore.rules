@@ -1,0 +1,79 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Validation helper for Category
+    function isValidCategory(data) {
+      return data.keys().hasAll(['name', 'color', 'archived'])
+        && data.keys().size() == 3
+        && data.name is string
+        && data.name.size() <= 100
+        && data.color is string
+        && data.color.size() <= 50
+        && data.archived is bool;
+    }
+
+    // Validation helper for Session
+    function isValidSession(data) {
+      return data.keys().hasAll([
+        'title', 'category', 'color', 'startDate', 'endDate', 'time_interval',
+        'guestMode', 'status', 'confirmedSlot', 'is_deleted', 'archived',
+        'duration', 'guests', 'expiry'
+      ])
+        && data.title is string
+        && data.title.size() <= 200
+        && data.category is string
+        && data.category.size() <= 100
+        && data.color is string
+        && data.color.size() <= 50
+        && data.startDate is string
+        && data.endDate is string
+        && data.time_interval is number
+        && data.guestMode is string
+        && data.status is string
+        && (data.confirmedSlot == null || data.confirmedSlot is string || data.confirmedSlot is list)
+        && data.is_deleted is bool
+        && data.archived is bool
+        && data.duration is string
+        && data.guests is list
+        && data.expiry is string
+        && (!data.keys().hasAll(['preventDuplicate']) || data.preventDuplicate is bool)
+        && (!data.keys().hasAll(['allowGuestMutation']) || data.allowGuestMutation is bool)
+        && (!data.keys().hasAll(['adminEmails']) || data.adminEmails is list)
+        && (!data.keys().hasAll(['viewerEmails']) || data.viewerEmails is list);
+    }
+
+    // Match rules for Categories collection
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow create: if isValidCategory(incoming());
+      allow update: if isValidCategory(incoming());
+      allow delete: if true;
+    }
+
+    // Match rules for Sessions collection
+    match /sessions/{sessionId} {
+      allow read: if true;
+      allow create: if isValidSession(incoming());
+      allow update: if isValidSession(incoming());
+      allow delete: if true;
+    }
+  }
+}

@@ -1,16 +1,16 @@
 # 세션 일정 통합 시스템 (Session Scheduler Integration System)
 
-본 프로젝트는 수기 일정 조율의 비효율성을 극복하고 일정을 한눈에 관리하며, 다양한 가상 SNS 계정 연동 및 일정 선호 조사를 통합하여 조율할 수 있는 **React + Vite 기반의 고성능 싱글 페이지 애플리케이션(SPA)**입니다.
+본 프로젝트는 수기 일정 조율의 비효율성을 극복하고 일정을 한눈에 관리하며, 다양한 가상 SNS 계정 연동 및 일정 선호 조사를 통합하여 조율할 수 있는 **Svelte 5 + Vite 기반의 고성능 싱글 페이지 애플리케이션(SPA)**입니다.
 
 ---
 
 ## 🛠️ 기술 스택 및 버전 정보
 
-- **프레임워크**: React (v18.2.0)
+- **프레임워크**: Svelte 5
 - **빌드 도구**: Vite (v5.1.5)
 - **주요 언어**: TypeScript (v5.2.2)
 - **스타일링**: Tailwind CSS (v4.0.0-beta)
-- **아이콘 라이브러리**: Lucide React
+- **아이콘 라이브러리**: Lucide Svelte
 - **애니메이션**: Motion (v12.4.0)
 - **PDF 내보내기**: jspdf & html2canvas
 
@@ -88,3 +88,35 @@ docker run -d -p 3000:3000 --name scheduler-app session-scheduler:latest
      --port 3000 \
      --allow-unauthenticated
    ```
+
+---
+
+## 🔥 Firebase CLI 연동 가이드
+
+본 프로젝트는 Firebase Firestore 및 Authentication을 사용합니다. 로컬 개발 환경에서 Firebase CLI를 통해 직접 데이터베이스 룰을 배포하거나 호스팅에 배포할 수 있습니다.
+
+### 1. Firebase CLI 설치 및 로그인
+```bash
+npm install -g firebase-tools
+firebase login
+```
+
+### 2. Firebase 프로젝트 초기화 및 연결
+프로젝트의 루트 디렉토리에서 다음 명령어를 실행하여 기존 Firebase 프로젝트와 연결합니다.
+```bash
+firebase use --add
+```
+또는 `firebase init` 명령어를 통해 Firestore와 Hosting을 선택하고 설정을 진행할 수 있습니다. (이미 `firebase.json`이 존재하므로 덮어쓰지 않도록 주의하세요.)
+
+### 3. Firestore 보안 규칙(Rules) 수동 배포
+로컬에서 수정한 `firestore.rules` 파일을 클라우드에 배포합니다.
+```bash
+firebase deploy --only firestore:rules
+```
+
+### 4. Firebase Hosting에 정적 앱 배포
+정적 호스팅 서비스를 Firebase Hosting으로 일원화하고 싶을 경우 다음을 실행합니다.
+```bash
+npm run build
+firebase deploy --only hosting
+```

@@ -6,12 +6,24 @@ export interface SessionDateInfo {
   date: Date;
 }
 
+export function getTotalWeeks(startDateStr: string, endDateStr: string): number {
+  const start = new Date(startDateStr.split('T')[0]);
+  const end = new Date(endDateStr.split('T')[0]);
+  if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+    return 1;
+  }
+  const diffTime = Math.abs(end.getTime() - start.getTime());
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+  return Math.ceil(diffDays / 7);
+}
+
 export function getSessionDatesForWeek(startDateStr: string, endDateStr: string, weekNum: number): SessionDateInfo[] {
   const daysEng = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const daysKor = ["일", "월", "화", "수", "목", "금", "토"];
 
-  const start = new Date(startDateStr);
-  const end = new Date(endDateStr);
+  // Strip time parts to accurately get all days in the range
+  const start = new Date(startDateStr.split('T')[0]);
+  const end = new Date(endDateStr.split('T')[0]);
   if (isNaN(start.getTime()) || isNaN(end.getTime())) {
     return [];
   }

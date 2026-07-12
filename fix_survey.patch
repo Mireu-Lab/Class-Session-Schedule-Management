@@ -1,0 +1,7 @@
+--- src/components/Survey.svelte
++++ src/components/Survey.svelte
+@@ -12,2 +12,4 @@
+     onSubmitReview,
++    currentUser,
++    onLogin,
+     showToast

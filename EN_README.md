@@ -188,10 +188,7 @@ npm run dev
 
 ### 💡 Documentation Reference Notes:
 
-1. **Role Definition**: Perfectly encompasses the core business logic derived from the alignments between the Lead Development Engineer (Miru Lim) and the end-user client (Donghyun Ha) outlined in the specification sheet.
+1. **Tech Stack Specification**: Formulated by inspecting `package.json` and `package-lock.json` to clearly chart the structural interplay between Svelte 5, Tailwind 4, Node 22+ companion infra scripts (`setup.sh`, `setup.ps1`), and the programmatic rendering engine pipeline (`Puppeteer`, `jspdf`, `html2canvas`).
 
 
-2. **Tech Stack Specification**: Formulated by inspecting `package.json` and `package-lock.json` to clearly chart the structural interplay between Svelte 5, Tailwind 4, Node 22+ companion infra scripts (`setup.sh`, `setup.ps1`), and the programmatic rendering engine pipeline (`Puppeteer`, `jspdf`, `html2canvas`).
-
-
-3. **Core Architectural Innovation**: Strategically emphasizes the high-impact **"0.2s Hold & Press Vertical Drag UX Interaction"** and **"Heatmap-based TOP 3 Time Slot Algorithm"** features at the top tier of the feature directory to elevate open-source competitiveness.
+2. **Core Architectural Innovation**: Strategically emphasizes the high-impact **"0.2s Hold & Press Vertical Drag UX Interaction"** and **"Heatmap-based TOP 3 Time Slot Algorithm"** features at the top tier of the feature directory to elevate open-source competitiveness.
